@@ -7,6 +7,10 @@ namespace planerConsole_1
 		public static void Main (string[] args)
 		{
 			Console.WriteLine ("Hello World!");
+
+			//TESTOWANIE TUTAJ ;)
+
+			Console.ReadLine();
 		}
 	}
 }
