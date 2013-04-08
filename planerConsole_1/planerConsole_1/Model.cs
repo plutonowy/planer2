@@ -16,6 +16,7 @@ namespace planerConsole_1
 
 		//private:
 		private StreamReader reader;
+		//private StreamWriter writer;
 		private UInt32 nodeMaxID; // aktualny najwyzszy ID node (potrzebne do tworzenia nowych wezlow i nadawania im ID)
 
 // methods:
@@ -33,31 +34,72 @@ namespace planerConsole_1
 			currentSubNodesList = new List<Node>();
 			currentLvl=0;
 			currentPath=path;
-			LoadCurrentSubNodesList(0);
 			reader = new StreamReader(this.currentPath);
-		//	writer = new StreamWriter(this.currentPath);
-			// Set Node.GlobalID = ???? (max node ID in file) +1
+			//LoadCurrentSubNodesList(0);
 		}
 
 		public void SetPath(string path)
 		{
 			this.currentPath = path;
 			reader = new StreamReader(this.currentPath);
-			//writer = new StreamWriter(this.currentPath);
 		}
 
-		public void LoadCurrentSubNodesList (string nodeName) // szuka wezla o nazwie nudeName i wpisuje nazwy jego podwezlów do listy currentSubNodesList
+		public void LoadCurrentSubNodesList () // PRZETESTOWAĆ!!!
 		{
-			//TESTOWANIE : StateOfNode cos = GetState("	-223344[podcel1A,    1]");
+			string line;
+			line = reader.ReadLine ();
+
+			int lvl = CountChars (line, '-');
+
+			currentSubNodesList.Clear();
+
+			while ((line=reader.ReadLine()) != null) 
+			{
+				if(CountChars(line, '-') == lvl)
+				{
+					string newNodeName = GetName(line); //wczytuje nazwe z pliku
+					UInt32 newNodeID = GetID(line); // wczytuje ID z pliku
+					StateOfNode newNodeState = GetState(line); // wczytuje stan z pliku
+
+					Node newNodeFromFile = new Node(newNodeName, newNodeState, newNodeID); // odtwarza w pamieci wezel zapisany w pliku 
+
+					currentSubNodesList.Add(newNodeFromFile); //dodaje wezel do listy
+				}
+				else if(CountChars(line, '-') > currentLvl) continue;
+				else if(CountChars(line,'-') < currentLvl) break;
+			}
+
 		}
 
-		public void LoadCurrentSubNodesList (int lvl) // przeladowanie robi tosamo z tym ze wpisuje WSZYSTKIE nazwy podwezłow (z danego poziomu lvl) do currentSubNodesList
+		public void LoadCurrentSubNodesList (int lvl) // PRZETESTOWAĆ!!||przeladowanie robi tosamo z tym ze wpisuje WSZYSTKIE nazwy podwezłow (z danego poziomu lvl) do currentSubNodesList
 		{
+			reader.BaseStream.Position = 0;
+
+			string line;
+			currentSubNodesList.Clear();
+
+			while((line = reader.ReadLine()) != null)
+			{
+				if(CountChars(line,'-') == lvl)
+				{
+					string newNodeName = GetName(line); //wczytuje nazwe z pliku
+					UInt32 newNodeID = GetID(line); // wczytuje ID z pliku
+					StateOfNode newNodeState = GetState(line); // wczytuje stan z pliku
+
+					Node newNodeFromFile = new Node(newNodeName, newNodeState, newNodeID); // odtwarza w pamieci wezel zapisany w pliku 
+
+					currentSubNodesList.Add(newNodeFromFile); //dodaje wezel do listy
+				}
+			}
+
+			reader.BaseStream.Position = 0; // wraca na poczatek pliku
 		}
 
 		//private:
 		private int CountTabs(string strLine) // przypadek szczegolny metdoy CountChars
 		{
+			if(!strLine.Contains("[")) return -1; // jeśli linia nie zawiera znaku'[' to uznaje ze jest błędna albo pusta
+
 			int count = 0;
 
 			foreach(char c in strLine)
@@ -70,6 +112,8 @@ namespace planerConsole_1
 
 		private int CountChars (string strLine, char value) // alternatywa dla ContTabs
 		{
+			if(!strLine.Contains("[")) return -1; // jeśli linia nie zawiera znaku'[' to uznaje ze jest błędna albo pusta
+
 			int count = 0;
 
 			foreach (char c in strLine) 
