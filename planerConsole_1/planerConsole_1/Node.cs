@@ -15,33 +15,25 @@ namespace planerConsole_1
 		public	StateOfNode state;
 		public  UInt32 nodeID;
 
-		//public static UInt32 GlobalID = 0; nie potrzebne
 
 		public Node ()
 		{
 			this.name = null;
 			this.state = StateOfNode.uncompleted;
-			//this.nodeID = GlobalID + 1;
-			//GlobalID++;
+			this.nodeID = 0;
 		}
 
-		public Node (string newName, StateOfNode newState)
+		public Node (string newName, StateOfNode newState, UInt32 newNodeID)
 		{
 			this.name = newName;
 			this.state = newState;
-			//this.nodeID = GlobalID + 1;
-			//GlobalID++;
+			this.nodeID = newNodeID;
 		}
 
 		public void SetNodeID(UInt32 newNodeID)
 		{
 			this.nodeID = newNodeID;
 		}
-
-		//public static void SetGlobalID(UInt32 newGlobalID)
-		//{
-		//	GlobalID = newGlobalID;
-		//}
 
 	}
 }

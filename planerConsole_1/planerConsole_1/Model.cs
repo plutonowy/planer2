@@ -15,9 +15,9 @@ namespace planerConsole_1
 		public string currentPath; //sciezka do pliku
 
 		//private:
-		//private StreamWriter writer;
 		private StreamReader reader;
 		private UInt32 nodeMaxID; // aktualny najwyzszy ID node (potrzebne do tworzenia nowych wezlow i nadawania im ID)
+
 // methods:
 		//public:
 		public Model ()
@@ -26,7 +26,6 @@ namespace planerConsole_1
 			currentLvl=0;
 			currentPath=null;
 			LoadCurrentSubNodesList(0);
-			// Set Node.GlobalID = ???? (max node ID in file) +1
 		}
 
 		public Model (string path) // ustawia path odrazu przy wywołaniu;
@@ -35,7 +34,7 @@ namespace planerConsole_1
 			currentLvl=0;
 			currentPath=path;
 			LoadCurrentSubNodesList(0);
-			//reader = new StreamReader(this.currentPath);
+			reader = new StreamReader(this.currentPath);
 		//	writer = new StreamWriter(this.currentPath);
 			// Set Node.GlobalID = ???? (max node ID in file) +1
 		}
@@ -57,7 +56,7 @@ namespace planerConsole_1
 		}
 
 		//private:
-		private int CountTabs(string strLine)
+		private int CountTabs(string strLine) // przypadek szczegolny metdoy CountChars
 		{
 			int count = 0;
 
@@ -66,6 +65,18 @@ namespace planerConsole_1
 				if(c=='\t') count++;
 			}
 	
+			return count;
+		}
+
+		private int CountChars (string strLine, char value) // alternatywa dla ContTabs
+		{
+			int count = 0;
+
+			foreach (char c in strLine) 
+			{
+				if(c==value) count++;
+			}
+
 			return count;
 		}
 
@@ -114,6 +125,8 @@ namespace planerConsole_1
 					return StateOfNode.completed;
 				case 2:
 					return StateOfNode.dontcare;
+				default:
+					return StateOfNode.uncompleted;
 				}
 			}
 
