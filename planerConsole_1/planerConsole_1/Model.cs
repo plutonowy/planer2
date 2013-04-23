@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-// WSZYSTKO OD NOWA---------8<-----------
+
 namespace planerConsole_1
 {
 	public class Model
