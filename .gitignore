@@ -1,0 +1,9 @@
+*.sln
+*.userprefs
+*.csproj
+*.exe
+*.mdb
+bin/
+debug/
+Properties/
+AssemblyInfo.cs

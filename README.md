@@ -5,7 +5,7 @@ PLANER_2
 
 KOMENDY GIT:
 //uzyteczne komendy gita
-
+cofanie zmian w local repo: "git checkout ."
 
 PRZYJETE KONWENCJE STYLISTYCZNE:
 
