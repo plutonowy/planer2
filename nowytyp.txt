@@ -1,9 +1,11 @@
 0[cel,0]
-	-1[podcel1A,0]
+	-1[podcel1,0]
 		--2[podcel1.1,0]
-		--3[podcel1.2,0
+		--3[podcel1.2,0]
 			---4[podcel1.2.1,0]
 			---5[podcel1.2.2,0]	
 		--6[podcel1.3,0]
 		--7[podcel1.4,0]
 	-8[podcel2,0]
+		--9[podcel2.1,0]
+		--10[podcel2.2,0]

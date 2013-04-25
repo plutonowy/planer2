@@ -46,15 +46,21 @@ namespace planerConsole_1
 
 		public void LoadCurrentSubNodesList () // PRZETESTOWAĆ!!!
 		{
-			string line;
-			line = reader.ReadLine ();
-
-			int lvl = CountChars (line, '-');
+			string line = "initial";
+			//line = reader.ReadLine ();
+			bool first = true;
+			int lvl;// = CountChars (line, '-');
 
 			currentSubNodesList.Clear();
 
 			while ((line=reader.ReadLine()) != null) 
 			{
+				if(first)
+				{
+					lvl = CountChars(line, '-');
+					first = false;
+				}
+
 				if(CountChars(line, '-') == lvl)
 				{
 					string newNodeName = GetName(line); //wczytuje nazwe z pliku
@@ -177,7 +183,7 @@ namespace planerConsole_1
 			return StateOfNode.uncompleted;
 		}
 
-		private void SetReaderOn (UInt32 ID)
+		/*private*/ public void SetReaderOn (UInt32 ID)
 		{
 			string line;
 
@@ -195,6 +201,23 @@ namespace planerConsole_1
 			{
 				if(GetID(line) == nod.nodeID) return;
 			}
+		}
+
+		private UInt32 FindNodeMaxID ()
+		{
+			reader.BaseStream.Position = 0;
+			string line;
+			UInt32 maxID = 0;
+
+			while ((line = reader.ReadLine()) != null) 
+			{
+				if(GetID(line) >= maxID)
+				{
+					maxID = GetID(line);
+				}
+			}
+
+			return maxID;
 		}
 
 	}
