@@ -17,7 +17,7 @@ namespace planerConsole_1
 		//private:
 		private StreamReader reader;
 		//private StreamWriter writer;
-		private UInt32 nodeMaxID; // aktualny najwyzszy ID node (potrzebne do tworzenia nowych wezlow i nadawania im ID)
+		private UInt32 maxNodeID; // aktualny najwyzszy ID node (potrzebne do tworzenia nowych wezlow i nadawania im ID)
 
 // methods:
 		//public:
@@ -46,27 +46,26 @@ namespace planerConsole_1
 		{
 			this.currentPath = path;
 			reader = new StreamReader(this.currentPath);
+			this.currentNode = null;
+			this.prevNodesStack = new List<Node>();
+			this.currentSubNodesList = new List<Node>();
+			this.currentLvl = 0;
+			this.maxNodeID = FindMaxNodeID();
 		}
 
 		public void LoadCurrentSubNodesList () // PRZETESTOWAĆ!!!
 		{
 			string line;
-			//line = reader.ReadLine ();
-			bool first = true;
-			int lvl=0;
 			long remPosition = reader.BaseStream.Position; // zapamiętanie by pod koniec operacji ustawić reader spowrotem na tej samej pozycji
+
+			SetReaderOn(currentNode.nodeID);
 
 			currentSubNodesList.Clear();
 
 			while ((line=reader.ReadLine()) != null) 
 			{
-				if(first)
-				{
-					lvl = CountChars(line, '-');
-					first = false;
-				}
 
-				if(CountChars(line, '-') == lvl)
+				if(CountChars(line, '-') == currentLvl+1)
 				{
 					string newNodeName = GetName(line); //wczytuje nazwe z pliku
 					UInt32 newNodeID = GetID(line); // wczytuje ID z pliku
@@ -76,8 +75,8 @@ namespace planerConsole_1
 
 					currentSubNodesList.Add(newNodeFromFile); //dodaje wezel do listy
 				}
-				else if(CountChars(line, '-') > lvl) continue;
-				else if(CountChars(line,'-') < lvl) break;
+				else if(CountChars(line, '-') > currentLvl+1) continue;
+				else if(CountChars(line,'-') < currentLvl+1) break;
 			}
 			reader.BaseStream.Position = remPosition;
 		}
@@ -111,19 +110,30 @@ namespace planerConsole_1
 		{
 			string line;
 			reader.BaseStream.Position = 0;
+			bool found = false;
 
-			while ((line = reader.ReadLine()) != null) 
+			foreach (Node n in currentSubNodesList) { // sprawdzanie czy zadany id znajduje się na liscie podwęzlów
+				if(ID == n.nodeID) {
+					found = true;
+					break;}}
+
+			if(found) // jesli id się znajduje to wyszukaj go
 			{
-				if(ID == GetID(line))
+				while ((line = reader.ReadLine()) != null) 
 				{
-					Node node = new Node(GetName(line), GetState(line), ID);
-					if(currentNode != null) prevNodesStack.Add(currentNode);
-					currentNode = node;
-					currentLvl = Convert.ToUInt16(CountChars(line,'-'));
-					LoadCurrentSubNodesList();
-					break;
+					if (ID == GetID (line)) // jeśli znalazł do ładuje parametry węzła z pliku do pamięci operacyjnej jako currentNode
+					{
+						Node node = new Node (GetName (line), GetState (line), ID);
+						if (currentNode != null)
+						prevNodesStack.Add (currentNode);
+						currentNode = node;
+						currentLvl = Convert.ToUInt16 (CountChars (line, '-'));
+						LoadCurrentSubNodesList ();
+						break;
+					}
 				}
 			}
+
 			reader.BaseStream.Position = 0;
 		}
 
@@ -148,12 +158,12 @@ namespace planerConsole_1
 				currentLvl = 0;
 				currentNode = null;
 				prevNodesStack.Clear();
+				reader.BaseStream.Position = 0; // ustawienie readera na początek pliku (nie pytaj po co)
 				LoadCurrentSubNodesList (0);
 			} else {
 				int indexOfLast = prevNodesStack.Count-1;
 				currentNode = prevNodesStack[indexOfLast];
 				prevNodesStack.RemoveAt(indexOfLast);
-				SetReaderOn(currentNode.nodeID);
 				currentLvl--;
 				LoadCurrentSubNodesList();
 				//LoadNode(currentNode.nodeID);
@@ -242,7 +252,7 @@ namespace planerConsole_1
 			return StateOfNode.uncompleted;
 		}
 
-		private void SetReaderOn (UInt32 ID)
+		private void SetReaderOn (UInt32 ID) // ustawia reader w pliku na koniec lini w kotrej z węzłem o podanym ID 
 		{
 			reader.BaseStream.Position = 0;
 
@@ -266,8 +276,10 @@ namespace planerConsole_1
 			}
 		}
 
-		private UInt32 FindNodeMaxID ()
+		private UInt32 FindMaxNodeID ()
 		{
+			long remPosition = reader.BaseStream.Position;
+
 			reader.BaseStream.Position = 0;
 			string line;
 			UInt32 maxID = 0;
@@ -280,7 +292,7 @@ namespace planerConsole_1
 				}
 			}
 
-			reader.BaseStream.Position = 0;
+			reader.BaseStream.Position = remPosition;
 
 			return maxID;
 		}

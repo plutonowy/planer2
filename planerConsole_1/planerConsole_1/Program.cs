@@ -11,6 +11,7 @@ namespace planerConsole_1
 			//TESTOWANIE TUTAJ ;)
 
 
+
 			//TESTOWANIE TUTAJ ;)
 
 			Console.ReadLine();
