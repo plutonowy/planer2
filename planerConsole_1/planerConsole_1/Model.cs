@@ -24,18 +24,22 @@ namespace planerConsole_1
 		public Model ()
 		{
 			currentSubNodesList = new List<Node>();
+			prevNodesStack = new List<Node>();
 			currentLvl=0;
 			currentPath=null;
+			currentNode=null;
 			LoadCurrentSubNodesList(0);
 		}
 
 		public Model (string path) // ustawia path odrazu przy wywołaniu;
 		{
 			currentSubNodesList = new List<Node>();
+			prevNodesStack = new List<Node>();
 			currentLvl=0;
 			currentPath=path;
+			currentNode=null;
 			reader = new StreamReader(this.currentPath);
-			//LoadCurrentSubNodesList(0);
+			LoadCurrentSubNodesList(0);
 		}
 
 		public void SetPath(string path)
@@ -46,10 +50,11 @@ namespace planerConsole_1
 
 		public void LoadCurrentSubNodesList () // PRZETESTOWAĆ!!!
 		{
-			string line = "initial";
+			string line;
 			//line = reader.ReadLine ();
 			bool first = true;
-			int lvl;// = CountChars (line, '-');
+			int lvl=0;
+			long remPosition = reader.BaseStream.Position; // zapamiętanie by pod koniec operacji ustawić reader spowrotem na tej samej pozycji
 
 			currentSubNodesList.Clear();
 
@@ -71,15 +76,16 @@ namespace planerConsole_1
 
 					currentSubNodesList.Add(newNodeFromFile); //dodaje wezel do listy
 				}
-				else if(CountChars(line, '-') > currentLvl) continue;
-				else if(CountChars(line,'-') < currentLvl) break;
+				else if(CountChars(line, '-') > lvl) continue;
+				else if(CountChars(line,'-') < lvl) break;
 			}
-
+			reader.BaseStream.Position = remPosition;
 		}
 
 		public void LoadCurrentSubNodesList (int lvl) // PRZETESTOWAĆ!!||przeladowanie robi tosamo z tym ze wpisuje WSZYSTKIE nazwy podwezłow (z danego poziomu lvl) do currentSubNodesList
 		{
-			reader.BaseStream.Position = 0;
+			long remPosition = reader.BaseStream.Position;
+			reader.BaseStream.Position = 0; // tutaj przeszukiwany jest caly plik
 
 			string line;
 			currentSubNodesList.Clear();
@@ -98,7 +104,60 @@ namespace planerConsole_1
 				}
 			}
 
-			reader.BaseStream.Position = 0; // wraca na poczatek pliku
+			reader.BaseStream.Position = remPosition; // ustawia reader tak jak był przed wywołaniem funkcji
+		}
+
+		public void LoadNode (UInt32 ID) // przetestować
+		{
+			string line;
+			reader.BaseStream.Position = 0;
+
+			while ((line = reader.ReadLine()) != null) 
+			{
+				if(ID == GetID(line))
+				{
+					Node node = new Node(GetName(line), GetState(line), ID);
+					if(currentNode != null) prevNodesStack.Add(currentNode);
+					currentNode = node;
+					currentLvl = Convert.ToUInt16(CountChars(line,'-'));
+					LoadCurrentSubNodesList();
+					break;
+				}
+			}
+			reader.BaseStream.Position = 0;
+		}
+
+		public void LoadNode (string NodeName)//przetestować // dla podanej nazwy wezla przeszukuje currentSubNodesList 
+		{
+			if (currentSubNodesList.Count <= 0)
+				return;
+
+			foreach (Node nod in currentSubNodesList) 
+			{
+				if(NodeName == nod.name)
+				{
+					LoadNode(nod.nodeID);
+					break;
+				}
+			}
+		}
+
+		public void GoBack () // przetestować!!!
+		{
+			if (prevNodesStack.Count < 1) {
+				currentLvl = 0;
+				currentNode = null;
+				prevNodesStack.Clear();
+				LoadCurrentSubNodesList (0);
+			} else {
+				int indexOfLast = prevNodesStack.Count-1;
+				currentNode = prevNodesStack[indexOfLast];
+				prevNodesStack.RemoveAt(indexOfLast);
+				SetReaderOn(currentNode.nodeID);
+				currentLvl--;
+				LoadCurrentSubNodesList();
+				//LoadNode(currentNode.nodeID);
+			}
 		}
 
 		//private:
@@ -108,7 +167,7 @@ namespace planerConsole_1
 
 			int count = 0;
 
-			foreach(char c in strLine)
+			foreach(char c in strLine) 
 			{
 				if(c=='\t') count++;
 			}
@@ -183,8 +242,10 @@ namespace planerConsole_1
 			return StateOfNode.uncompleted;
 		}
 
-		/*private*/ public void SetReaderOn (UInt32 ID)
+		private void SetReaderOn (UInt32 ID)
 		{
+			reader.BaseStream.Position = 0;
+
 			string line;
 
 			while ((line = reader.ReadLine()) != null) 
@@ -195,6 +256,8 @@ namespace planerConsole_1
 
 		private void SetReaderOn (Node nod) // overload, now you can send Node object like a argument
 		{
+			reader.BaseStream.Position = 0;
+
 			string line;
 
 			while ((line = reader.ReadLine()) != null) 
@@ -216,6 +279,8 @@ namespace planerConsole_1
 					maxID = GetID(line);
 				}
 			}
+
+			reader.BaseStream.Position = 0;
 
 			return maxID;
 		}
