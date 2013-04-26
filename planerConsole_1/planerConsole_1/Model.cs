@@ -10,9 +10,9 @@ namespace planerConsole_1
 		//public:
 		public Node currentNode; // przechowuje aktualny wezel
 		public List<Node> prevNodesStack;  // przechowuje wezly przodkow (stos przodkow (pierwszy element = korzen | ostatni = ojciec))
-		public List<Node> currentSubNodesList; // lista podcelow danego wezla np dla wezla DOM -> lista: okno, drzwi, dach
-		public UInt16 currentLvl; // poziom zaglębienia w pliku
-		public string currentPath; //sciezka do pliku
+		public List<Node> subNodesList; // lista podcelow danego wezla np dla wezla DOM -> lista: okno, drzwi, dach
+		public UInt16 level; // poziom zaglębienia w pliku
+		public string filePath; //sciezka do pliku
 
 		//private:
 		private StreamReader reader;
@@ -23,49 +23,49 @@ namespace planerConsole_1
 		//public:
 		public Model ()
 		{
-			currentSubNodesList = new List<Node>();
+			subNodesList = new List<Node>();
 			prevNodesStack = new List<Node>();
-			currentLvl=0;
-			currentPath=null;
+			level=0;
+			filePath=null;
 			currentNode=null;
-			LoadCurrentSubNodesList(0);
+			LoadSubNodesList(0);
 		}
 
 		public Model (string path) // ustawia path odrazu przy wywołaniu;
 		{
-			currentSubNodesList = new List<Node>();
+			subNodesList = new List<Node>();
 			prevNodesStack = new List<Node>();
-			currentLvl=0;
-			currentPath=path;
+			level=0;
+			filePath=path;
 			currentNode=null;
-			reader = new StreamReader(this.currentPath);
-			LoadCurrentSubNodesList(0);
+			reader = new StreamReader(this.filePath);
+			LoadSubNodesList(0);
 		}
 
-		public void SetPath(string path)
+		public void SetFilePath(string path)
 		{
-			this.currentPath = path;
-			reader = new StreamReader(this.currentPath);
+			this.filePath = path;
+			this.reader = new StreamReader(this.filePath);
 			this.currentNode = null;
 			this.prevNodesStack = new List<Node>();
-			this.currentSubNodesList = new List<Node>();
-			this.currentLvl = 0;
+			this.subNodesList = new List<Node>();
+			this.level = 0;
 			this.maxNodeID = FindMaxNodeID();
 		}
 
-		public void LoadCurrentSubNodesList () // PRZETESTOWAĆ!!!
+		public void LoadSubNodesList () // PRZETESTOWAĆ!!!
 		{
 			string line;
 			long remPosition = reader.BaseStream.Position; // zapamiętanie by pod koniec operacji ustawić reader spowrotem na tej samej pozycji
+			//zabespieczyć reader przed brakiem sciezki
+			SetReaderOn(currentNode.nodeID); // zabezpieczyć przed wart null
 
-			SetReaderOn(currentNode.nodeID);
-
-			currentSubNodesList.Clear();
+			subNodesList.Clear();
 
 			while ((line=reader.ReadLine()) != null) 
 			{
 
-				if(CountChars(line, '-') == currentLvl+1)
+				if(CountChars(line, '-') == level+1)
 				{
 					string newNodeName = GetName(line); //wczytuje nazwe z pliku
 					UInt32 newNodeID = GetID(line); // wczytuje ID z pliku
@@ -73,21 +73,21 @@ namespace planerConsole_1
 
 					Node newNodeFromFile = new Node(newNodeName, newNodeState, newNodeID); // odtwarza w pamieci wezel zapisany w pliku 
 
-					currentSubNodesList.Add(newNodeFromFile); //dodaje wezel do listy
+					subNodesList.Add(newNodeFromFile); //dodaje wezel do listy
 				}
-				else if(CountChars(line, '-') > currentLvl+1) continue;
-				else if(CountChars(line,'-') < currentLvl+1) break;
+				else if(CountChars(line, '-') > level+1) continue; //currentLvl+1 chodzi o poziom niżej od węzła currentNode
+				else if(CountChars(line,'-') < level+1) break;
 			}
 			reader.BaseStream.Position = remPosition;
 		}
 
-		public void LoadCurrentSubNodesList (int lvl) // PRZETESTOWAĆ!!||przeladowanie robi tosamo z tym ze wpisuje WSZYSTKIE nazwy podwezłow (z danego poziomu lvl) do currentSubNodesList
+		public void LoadSubNodesList (int lvl) // PRZETESTOWAĆ!!||przeladowanie robi tosamo z tym ze wpisuje WSZYSTKIE nazwy podwezłow (z danego poziomu lvl) do currentSubNodesList
 		{
-			long remPosition = reader.BaseStream.Position;
+			long remPosition = reader.BaseStream.Position; // zabezpieczyć przed reader bez sciezki
 			reader.BaseStream.Position = 0; // tutaj przeszukiwany jest caly plik
 
 			string line;
-			currentSubNodesList.Clear();
+			subNodesList.Clear();
 
 			while((line = reader.ReadLine()) != null)
 			{
@@ -99,7 +99,7 @@ namespace planerConsole_1
 
 					Node newNodeFromFile = new Node(newNodeName, newNodeState, newNodeID); // odtwarza w pamieci wezel zapisany w pliku 
 
-					currentSubNodesList.Add(newNodeFromFile); //dodaje wezel do listy
+					subNodesList.Add(newNodeFromFile); //dodaje wezel do listy
 				}
 			}
 
@@ -109,10 +109,10 @@ namespace planerConsole_1
 		public void LoadNode (UInt32 ID) // przetestować
 		{
 			string line;
-			reader.BaseStream.Position = 0;
+			reader.BaseStream.Position = 0; //zabezpieczyć przed reader bez sciezki do pliku
 			bool found = false;
 
-			foreach (Node n in currentSubNodesList) { // sprawdzanie czy zadany id znajduje się na liscie podwęzlów
+			foreach (Node n in subNodesList) { // sprawdzanie czy zadany id znajduje się na liscie podwęzlów
 				if(ID == n.nodeID) {
 					found = true;
 					break;}}
@@ -127,8 +127,8 @@ namespace planerConsole_1
 						if (currentNode != null)
 						prevNodesStack.Add (currentNode);
 						currentNode = node;
-						currentLvl = Convert.ToUInt16 (CountChars (line, '-'));
-						LoadCurrentSubNodesList ();
+						level = Convert.ToUInt16 (CountChars (line, '-'));
+						LoadSubNodesList ();
 						break;
 					}
 				}
@@ -139,10 +139,10 @@ namespace planerConsole_1
 
 		public void LoadNode (string NodeName)//przetestować // dla podanej nazwy wezla przeszukuje currentSubNodesList 
 		{
-			if (currentSubNodesList.Count <= 0)
+			if (subNodesList.Count <= 0)
 				return;
 
-			foreach (Node nod in currentSubNodesList) 
+			foreach (Node nod in subNodesList) 
 			{
 				if(NodeName == nod.name)
 				{
@@ -152,20 +152,20 @@ namespace planerConsole_1
 			}
 		}
 
-		public void GoBack () // przetestować!!!
+		public void GoBack () //wstępne testy OK
 		{
 			if (prevNodesStack.Count < 1) {
-				currentLvl = 0;
+				level = 0;
 				currentNode = null;
 				prevNodesStack.Clear();
 				reader.BaseStream.Position = 0; // ustawienie readera na początek pliku (nie pytaj po co)
-				LoadCurrentSubNodesList (0);
+				LoadSubNodesList (0);
 			} else {
 				int indexOfLast = prevNodesStack.Count-1;
 				currentNode = prevNodesStack[indexOfLast];
 				prevNodesStack.RemoveAt(indexOfLast);
-				currentLvl--;
-				LoadCurrentSubNodesList();
+				level--;
+				LoadSubNodesList();
 				//LoadNode(currentNode.nodeID);
 			}
 		}
@@ -254,7 +254,7 @@ namespace planerConsole_1
 
 		private void SetReaderOn (UInt32 ID) // ustawia reader w pliku na koniec lini w kotrej z węzłem o podanym ID 
 		{
-			reader.BaseStream.Position = 0;
+			reader.BaseStream.Position = 0; //zabezpieczyc przed reader bez sciezki do pliku
 
 			string line;
 
@@ -266,7 +266,7 @@ namespace planerConsole_1
 
 		private void SetReaderOn (Node nod) // overload, now you can send Node object like a argument
 		{
-			reader.BaseStream.Position = 0;
+			reader.BaseStream.Position = 0;//zabezpieczyc przed reader bez sciezki do pliku
 
 			string line;
 
@@ -279,7 +279,7 @@ namespace planerConsole_1
 		private UInt32 FindMaxNodeID ()
 		{
 			long remPosition = reader.BaseStream.Position;
-
+			//zabezpieczyc przed reader bez sciezki do pliku
 			reader.BaseStream.Position = 0;
 			string line;
 			UInt32 maxID = 0;
