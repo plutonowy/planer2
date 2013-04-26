@@ -199,6 +199,11 @@ namespace planerConsole_1
 			return count;
 		}
 
+		private UInt16 GetLvl (string line)
+		{
+			return Convert.ToUInt16(CountChars(line, '-'));
+		}
+
 		private string GetName(string line) // zwraca nazwe węzła (parsuje linie dokopując się do nazwy ) (pomija zbedna znaki)
 		{
 			char[] parseChars = {'\t', '-', ' '}; // pomijane znaki
@@ -297,6 +302,35 @@ namespace planerConsole_1
 			return maxID;
 		}
 
+		private Stack<Node> GetPrevNodesStack (UInt32 ID) // nie testowane!! przetestować
+		{
+			Stack<UInt32> stackID = new Stack<UInt32> ();
+			//zabezpieczyc przed reader bez sciezki do pliku
+			long remPosition = reader.BaseStream.Position;
+			reader.BaseStream.Position = 0;
+			//int currentlvl = 0;
+			string prevLine = reader.ReadLine();
+			string line = prevLine;
+
+			if(GetID(line) == ID) return stackID;
+
+			while ((line = reader.ReadLine()) != null) 
+			{
+				if(GetLvl(line) > GetLvl(prevLine))
+				{
+					stackID.Push(GetID(prevLine));
+				}
+				else if(GetLvl(line) < GetLvl(prevLine))
+				{
+					if(stackID.Count >= 1) stackID.Pop();
+				}
+
+				if(GetID(line) == ID) return stackID;
+
+				prevLine = line; 
+			}
+
+		}
 	}
 }
 
