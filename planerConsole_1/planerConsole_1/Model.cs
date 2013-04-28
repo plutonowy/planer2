@@ -302,17 +302,21 @@ namespace planerConsole_1
 			return maxID;
 		}
 
-		private Stack<Node> GetPrevNodesStack (UInt32 ID) // nie testowane!! przetestować
+
+
+		private Stack<UInt32> GetPrevNodesStack (UInt32 ID) //przetestowane wstepnie
 		{
 			Stack<UInt32> stackID = new Stack<UInt32> ();
 			//zabezpieczyc przed reader bez sciezki do pliku
 			long remPosition = reader.BaseStream.Position;
 			reader.BaseStream.Position = 0;
 			//int currentlvl = 0;
-			string prevLine = reader.ReadLine();
+			string prevLine = reader.ReadLine ();
 			string line = prevLine;
 
-			if(GetID(line) == ID) return stackID;
+			if (GetID (line) == ID) {
+				reader.BaseStream.Position = remPosition;
+				return stackID;}
 
 			while ((line = reader.ReadLine()) != null) 
 			{
@@ -324,13 +328,16 @@ namespace planerConsole_1
 				{
 					if(stackID.Count >= 1) stackID.Pop();
 				}
-
-				if(GetID(line) == ID) return stackID;
-
+			
+				if(GetID(line) == ID){
+					reader.BaseStream.Position = remPosition;
+					return stackID;}
+			
 				prevLine = line; 
 			}
 
+			reader.BaseStream.Position = remPosition;
+			return stackID;
 		}
 	}
 }
-
