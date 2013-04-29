@@ -117,7 +117,7 @@ namespace planerConsole_1
 					found = true;
 					break;}}
 
-			if(found) // jesli id się znajduje to wyszukaj go
+			if(found) // jesli id znajduje sie na liscie to wyszukaj go w pliku
 			{
 				while ((line = reader.ReadLine()) != null) 
 				{
@@ -170,8 +170,33 @@ namespace planerConsole_1
 			}
 		}
 
+		public void HardLoadNode (UInt32 ID) // dokonczyc!!!!!!!
+		{
+			string line;
+			long remPosition = reader.BaseStream.Position;
+			reader.BaseStream.Position = 0;
+
+			while ((line = reader.ReadLine()) != null) 
+			{
+				if(ID == GetID(line))
+				{
+					Stack<UInt32> idStack = new Stack<uint>();
+					idStack = GetPrevNodesStack(ID);
+
+					if(idStack.Count > 0)
+					{
+						prevNodesStack.Clear();
+
+
+					}
+				}
+			}
+
+			reader.BaseStream.Position = remPosition;
+		}
+
 		//private:
-		private int CountTabs(string strLine) // przypadek szczegolny metdoy CountChars
+		private int CountTabs(string strLine) // przypadek szczegolny metody CountChars
 		{
 			if(!strLine.Contains("[")) return -1; // jeśli linia nie zawiera znaku'[' to uznaje ze jest błędna albo pusta
 
@@ -267,6 +292,8 @@ namespace planerConsole_1
 			{
 				if(GetID(line) == ID) return;
 			}
+
+			reader.BaseStream.Position = 0;
 		}
 
 		private void SetReaderOn (Node nod) // overload, now you can send Node object like a argument
@@ -279,6 +306,8 @@ namespace planerConsole_1
 			{
 				if(GetID(line) == nod.nodeID) return;
 			}
+
+			reader.BaseStream.Position = 0;
 		}
 
 		private UInt32 FindMaxNodeID ()
@@ -302,15 +331,12 @@ namespace planerConsole_1
 			return maxID;
 		}
 
-
-
 		private Stack<UInt32> GetPrevNodesStack (UInt32 ID) //przetestowane wstepnie
 		{
 			Stack<UInt32> stackID = new Stack<UInt32> ();
 			//zabezpieczyc przed reader bez sciezki do pliku
 			long remPosition = reader.BaseStream.Position;
 			reader.BaseStream.Position = 0;
-			//int currentlvl = 0;
 			string prevLine = reader.ReadLine ();
 			string line = prevLine;
 
