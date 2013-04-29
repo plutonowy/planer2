@@ -176,14 +176,14 @@ namespace planerConsole_1
 			{
 				if(ID == GetID(line))
 				{
-					Stack<UInt32> idStack = GetPrevNodesStack(ID); 
+					Stack<Node> nodeStack = GetPrevNodesStack(ID); 
 
 					prevNodesStack.Clear();
 					subNodesList.Clear();
 
-					if(idStack.Count >= 1){
-						while(idStack.Count > 0){
-							prevNodesStack.Add(GetNodeFromFile(idStack.Pop()));
+					if(nodeStack.Count >= 1){
+						while(nodeStack.Count > 0){
+							prevNodesStack.Add(nodeStack.Pop());
 						}
 						prevNodesStack.Reverse();
 					}
@@ -361,9 +361,9 @@ namespace planerConsole_1
 			return maxID;
 		}
 
-		private Stack<UInt32> GetPrevNodesStack (UInt32 ID) //przetestowane wstepnie
+		private Stack<Node> GetPrevNodesStack (UInt32 ID) //przetestowane wstepnie
 		{
-			Stack<UInt32> stackID = new Stack<UInt32> ();
+			Stack<Node> stackNode = new Stack<Node> ();
 			//zabezpieczyc przed reader bez sciezki do pliku
 			long remPosition = reader.BaseStream.Position;
 			reader.BaseStream.Position = 0;
@@ -372,28 +372,28 @@ namespace planerConsole_1
 
 			if (GetID (line) == ID) {
 				reader.BaseStream.Position = remPosition;
-				return stackID;}
+				return stackNode;}
 
 			while ((line = reader.ReadLine()) != null) 
 			{
 				if(GetLvl(line) > GetLvl(prevLine))
 				{
-					stackID.Push(GetID(prevLine));
+					stackNode.Push(GetNode(prevLine));
 				}
 				else if(GetLvl(line) < GetLvl(prevLine))
 				{
-					if(stackID.Count >= 1) stackID.Pop();
+					if(stackNode.Count >= 1) stackNode.Pop();
 				}
 			
 				if(GetID(line) == ID){
 					reader.BaseStream.Position = remPosition;
-					return stackID;}
+					return stackNode;}
 			
 				prevLine = line; 
 			}
 
 			reader.BaseStream.Position = remPosition;
-			return stackID;
+			return stackNode;
 		}
 	}
 }

@@ -11,13 +11,13 @@ namespace planerConsole_1
 
 			//TESTOWANIE TUTAJ ;)
 
-			Model mod = new Model("/home/ramzes/workspaces/mono-workspace/planer2/nowytyp.txt");
+			/*Model mod = new Model("/home/ramzes/workspaces/mono-workspace/planer2/nowytyp.txt");
 
-			mod.LoadNode(0);
-			mod.LoadNode(1);
-			mod.LoadNode(3);
-			mod.LoadNode(4);
-			mod.LoadNode(5);
+			mod.LoadNode("cel");
+			mod.LoadNode("podcel1");
+			mod.LoadNode("podcel1.2");
+			mod.LoadNode("podcel1.2.1");
+			mod.LoadNode("podcel1.2.2");
 
 			mod.GoBack();
 			mod.GoBack();
@@ -25,7 +25,8 @@ namespace planerConsole_1
 			mod.GoBack();
 			mod.GoBack();
 
-			mod.HardLoadNode(5);
+			mod.HardLoadNode(0);*/
+
 			//TESTOWANIE TUTAJ ;)
 
 			Console.ReadLine();
