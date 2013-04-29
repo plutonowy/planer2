@@ -64,20 +64,16 @@ namespace planerConsole_1
 
 			while ((line=reader.ReadLine()) != null) 
 			{
-
 				if(CountChars(line, '-') == level+1)
 				{
-					string newNodeName = GetName(line); //wczytuje nazwe z pliku
-					UInt32 newNodeID = GetID(line); // wczytuje ID z pliku
-					StateOfNode newNodeState = GetState(line); // wczytuje stan z pliku
-
-					Node newNodeFromFile = new Node(newNodeName, newNodeState, newNodeID); // odtwarza w pamieci wezel zapisany w pliku 
+					Node newNodeFromFile = GetNode(line); // odtwarza w pamieci wezel zapisany w pliku 
 
 					subNodesList.Add(newNodeFromFile); //dodaje wezel do listy
 				}
 				else if(CountChars(line, '-') > level+1) continue; //currentLvl+1 chodzi o poziom niżej od węzła currentNode
 				else if(CountChars(line,'-') < level+1) break;
 			}
+
 			reader.BaseStream.Position = remPosition;
 		}
 
@@ -93,11 +89,7 @@ namespace planerConsole_1
 			{
 				if(CountChars(line,'-') == lvl)
 				{
-					string newNodeName = GetName(line); //wczytuje nazwe z pliku
-					UInt32 newNodeID = GetID(line); // wczytuje ID z pliku
-					StateOfNode newNodeState = GetState(line); // wczytuje stan z pliku
-
-					Node newNodeFromFile = new Node(newNodeName, newNodeState, newNodeID); // odtwarza w pamieci wezel zapisany w pliku 
+					Node newNodeFromFile = GetNode(line); // odtwarza w pamieci wezel zapisany w pliku 
 
 					subNodesList.Add(newNodeFromFile); //dodaje wezel do listy
 				}
@@ -108,8 +100,6 @@ namespace planerConsole_1
 
 		public void LoadNode (UInt32 ID) // przetestować
 		{
-			string line;
-			reader.BaseStream.Position = 0; //zabezpieczyć przed reader bez sciezki do pliku
 			bool found = false;
 
 			foreach (Node n in subNodesList) { // sprawdzanie czy zadany id znajduje się na liscie podwęzlów
@@ -117,24 +107,30 @@ namespace planerConsole_1
 					found = true;
 					break;}}
 
+			string line;
+			long remPosition = reader.BaseStream.Position;
+			reader.BaseStream.Position = 0; //zabezpieczyć przed reader bez sciezki do pliku
+
 			if(found) // jesli id znajduje sie na liscie to wyszukaj go w pliku
 			{
 				while ((line = reader.ReadLine()) != null) 
 				{
 					if (ID == GetID (line)) // jeśli znalazł do ładuje parametry węzła z pliku do pamięci operacyjnej jako currentNode
 					{
-						Node node = new Node (GetName (line), GetState (line), ID);
+						Node node = GetNode(line);
+
 						if (currentNode != null)
-						prevNodesStack.Add (currentNode);
+							prevNodesStack.Add (currentNode);
+
 						currentNode = node;
-						level = Convert.ToUInt16 (CountChars (line, '-'));
+						level = GetLvl(line);
 						LoadSubNodesList ();
 						break;
 					}
 				}
 			}
 
-			reader.BaseStream.Position = 0;
+			reader.BaseStream.Position = remPosition;
 		}
 
 		public void LoadNode (string NodeName)//przetestować // dla podanej nazwy wezla przeszukuje currentSubNodesList 
@@ -170,7 +166,7 @@ namespace planerConsole_1
 			}
 		}
 
-		public void HardLoadNode (UInt32 ID) // dokonczyc!!!!!!!
+		public void HardLoadNode (UInt32 ID) // PRZETESTOWAĆ
 		{
 			string line;
 			long remPosition = reader.BaseStream.Position;
@@ -180,15 +176,22 @@ namespace planerConsole_1
 			{
 				if(ID == GetID(line))
 				{
-					Stack<UInt32> idStack = new Stack<uint>();
-					idStack = GetPrevNodesStack(ID);
+					Stack<UInt32> idStack = GetPrevNodesStack(ID); 
 
-					if(idStack.Count > 0)
-					{
-						prevNodesStack.Clear();
+					prevNodesStack.Clear();
+					subNodesList.Clear();
 
-
+					if(idStack.Count >= 1){
+						while(idStack.Count > 0){
+							prevNodesStack.Add(GetNodeFromFile(idStack.Pop()));
+						}
+						prevNodesStack.Reverse();
 					}
+
+					level = GetLvl(line);
+					currentNode = GetNode(line);
+					LoadSubNodesList();
+					break;
 				}
 			}
 
@@ -216,8 +219,7 @@ namespace planerConsole_1
 
 			int count = 0;
 
-			foreach (char c in strLine) 
-			{
+			foreach (char c in strLine) {
 				if(c==value) count++;
 			}
 
@@ -227,6 +229,36 @@ namespace planerConsole_1
 		private UInt16 GetLvl (string line)
 		{
 			return Convert.ToUInt16(CountChars(line, '-'));
+		}
+
+		private Node GetNodeFromFile (UInt32 ID)
+		{
+			long remPosition = reader.BaseStream.Position;
+			reader.BaseStream.Position = 0;
+
+			string line;
+
+			while ((line = reader.ReadLine()) != null) 
+			{
+				if(ID == GetID(line)){
+					reader.BaseStream.Position = remPosition;
+					return GetNode(line);
+				}
+			}
+
+			reader.BaseStream.Position = remPosition;
+			return null;
+		}
+
+		private Node GetNode (string line)
+		{
+			Node newNode = new Node();
+
+			newNode.name = GetName(line);
+			newNode.nodeID = GetID(line);
+			newNode.state = GetState(line);
+
+			return newNode;
 		}
 
 		private string GetName(string line) // zwraca nazwe węzła (parsuje linie dokopując się do nazwy ) (pomija zbedna znaki)
@@ -240,7 +272,6 @@ namespace planerConsole_1
 			else return null;
 
 		}
-
 		private UInt32 GetID (string line)
 		{
 			char[] parseChars = {'\t', '-', ' '};
@@ -251,7 +282,6 @@ namespace planerConsole_1
 			if(end>0) return UInt32.Parse(line.Substring(0,end));
 			else return 0;
 		}
-
 		private StateOfNode GetState (string line)
 		{
 			char[] parseChars = {'\t', '-', ' '};
