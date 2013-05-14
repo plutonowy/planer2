@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace planerConsole_1
 {
@@ -17,23 +18,10 @@ namespace planerConsole_1
 				conductor.controllerInput(Console.ReadLine());
 
 
-			}
-			/*
-			mod.LoadNode(0);
-			mod.LoadNode(1);
-			mod.LoadNode(3);
-			mod.LoadNode(4);
-			mod.LoadNode(5);
-
-			mod.GoBack();
-			mod.GoBack();
-			mod.GoBack();
-			mod.GoBack();
-			mod.GoBack();
-*/
 			//TESTOWANIE TUTAJ ;)
 
 			//Console.ReadLine();
+			}
 		}
 	}
 }
