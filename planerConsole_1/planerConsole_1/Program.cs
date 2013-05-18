@@ -7,21 +7,10 @@ namespace planerConsole_1
 	{
 		public static void Main (string[] args)
 		{
-			Console.WriteLine ("Hello World!");
-
-			//TESTOWANIE TUTAJ ;)
-			Model mod = new Model ("/home/kamil/Desktop/repositories/connector/nowytyp.txt");
-			Controller conductor = new Controller (mod);
-			while (true) 
-			{
-				Console.Write(":>> ");
-				conductor.controllerInput(Console.ReadLine());
-
-
 			//TESTOWANIE TUTAJ ;)
 
-			//Console.ReadLine();
-			}
+			//TESTOWANIE TUTAJ ;)
+			Console.ReadLine();
 		}
 	}
 }

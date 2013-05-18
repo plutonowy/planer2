@@ -6,213 +6,163 @@ namespace planerConsole_1
 {
 	public class Model
 	{
-// variables
-		//public:
-		public Node currentNode; // przechowuje aktualny wezel
-		public List<Node> prevNodesStack;  // przechowuje wezly przodkow (stos przodkow (pierwszy element = korzen | ostatni = ojciec))
-		public List<Node> subNodesList; // lista podcelow danego wezla np dla wezla DOM -> lista: okno, drzwi, dach
-		public UInt16 level; // poziom zaglębienia w pliku
-		public string filePath; //sciezka do pliku
 
-		//private:
+// variables
+		public string filePath;
+
+	//private:
 		private StreamReader reader;
+		//private UInt32 maxNodeID; // aktualny najwyzszy ID node (potrzebne do tworzenia nowych wezlow i nadawania im ID)
 		//private StreamWriter writer;
-		private UInt32 maxNodeID; // aktualny najwyzszy ID node (potrzebne do tworzenia nowych wezlow i nadawania im ID)
 
 // methods:
-		//public:
 		public Model ()
 		{
-			subNodesList = new List<Node>();
-			prevNodesStack = new List<Node>();
-			level=0;
 			filePath=null;
-			currentNode=null;
-			LoadSubNodesList(0);
 		}
 
 		public Model (string path) // ustawia path odrazu przy wywołaniu;
 		{
-			subNodesList = new List<Node>();
-			prevNodesStack = new List<Node>();
-			level=0;
 			filePath=path;
-			currentNode=null;
 			reader = new StreamReader(this.filePath);
-			LoadSubNodesList(0);
 		}
 
 		public void SetFilePath(string path)
 		{
 			this.filePath = path;
 			this.reader = new StreamReader(this.filePath);
-			this.currentNode = null;
-			this.prevNodesStack = new List<Node>();
-			this.subNodesList = new List<Node>();
-			this.level = 0;
-			this.maxNodeID = FindMaxNodeID();
 		}
 
-		public void LoadSubNodesList () // PRZETESTOWAĆ!!!
+		public List<Node> GetSubNodesList (UInt32 ID) // PRZETESTOWAĆ!!!
 		{
-			string line;
 			long remPosition = reader.BaseStream.Position; // zapamiętanie by pod koniec operacji ustawić reader spowrotem na tej samej pozycji
 			//zabespieczyć reader przed brakiem sciezki
-			SetReaderOn(currentNode.nodeID); // zabezpieczyć przed wart null
 
-			subNodesList.Clear();
+			SetReaderOn(ID); // zabezpieczyć przed wart null
+			string line;
+			List<Node> subNodesList = new List<Node>();
+
+			int subLevel = GetLvl(ID)+1; // level podwięzłów węzła ID
 
 			while ((line=reader.ReadLine()) != null) 
 			{
-				if(CountChars(line, '-') == level+1)
+				if(ParseLevel(line) == subLevel)
 				{
-					Node newNodeFromFile = GetNode(line); // odtwarza w pamieci wezel zapisany w pliku 
-
-					subNodesList.Add(newNodeFromFile); //dodaje wezel do listy
+					Node newNode = ParseNode(line); // odtwarza w pamieci wezel zapisany w pliku 
+					subNodesList.Add(newNode); //dodaje wezel do listy
 				}
-				else if(CountChars(line, '-') > level+1) continue; //currentLvl+1 chodzi o poziom niżej od węzła currentNode
-				else if(CountChars(line,'-') < level+1) break;
+				else if(ParseLevel(line) > subLevel) continue; //currentLvl+1 chodzi o poziom niżej od węzła currentNode
+				else if(ParseLevel(line) < subLevel) break;
 			}
 
 			reader.BaseStream.Position = remPosition;
+			return subNodesList;
 		}
 
-		public void LoadSubNodesList (int lvl) // PRZETESTOWAĆ!!||przeladowanie robi tosamo z tym ze wpisuje WSZYSTKIE nazwy podwezłow (z danego poziomu lvl) do currentSubNodesList
+		public List<Node> GetSubNodesList (int level) // PRZETESTOWAĆ!!||przeladowanie robi tosamo z tym ze wpisuje WSZYSTKIE nazwy podwezłow (z danego poziomu lvl) do currentSubNodesList
 		{
 			long remPosition = reader.BaseStream.Position; // zabezpieczyć przed reader bez sciezki
 			reader.BaseStream.Position = 0; // tutaj przeszukiwany jest caly plik
 
 			string line;
-			subNodesList.Clear();
+			List<Node> subNodesList = new List<Node>();
 
 			while((line = reader.ReadLine()) != null)
 			{
-				if(CountChars(line,'-') == lvl)
+				if(ParseLevel(line) == level)
 				{
-					Node newNodeFromFile = GetNode(line); // odtwarza w pamieci wezel zapisany w pliku 
-
-					subNodesList.Add(newNodeFromFile); //dodaje wezel do listy
+					Node newNode = ParseNode(line); // odtwarza w pamieci wezel zapisany w pliku 
+					subNodesList.Add(newNode); //dodaje wezel do listy
 				}
 			}
 
 			reader.BaseStream.Position = remPosition; // ustawia reader tak jak był przed wywołaniem funkcji
+			return subNodesList;
 		}
 
-		public void LoadNode (UInt32 ID) // przetestować
+		public int GetLvl (UInt32 ID)
 		{
-			bool found = false;
+			long remPosition = reader.BaseStream.Position;
 
-			foreach (Node n in subNodesList) { // sprawdzanie czy zadany id znajduje się na liscie podwęzlów
-				if(ID == n.nodeID) {
-					found = true;
-					break;}}
+			reader.BaseStream.Position = 0;
 
 			string line;
-			long remPosition = reader.BaseStream.Position;
-			reader.BaseStream.Position = 0; //zabezpieczyć przed reader bez sciezki do pliku
-
-			if(found) // jesli id znajduje sie na liscie to wyszukaj go w pliku
+			while ((line = reader.ReadLine()) != null) 
 			{
-				while ((line = reader.ReadLine()) != null) 
-				{
-					if (ID == GetID (line)) // jeśli znalazł do ładuje parametry węzła z pliku do pamięci operacyjnej jako currentNode
-					{
-						Node node = GetNode(line);
-
-						if (currentNode != null)
-							prevNodesStack.Add (currentNode);
-
-						currentNode = node;
-						level = GetLvl(line);
-						LoadSubNodesList ();
-						break;
-					}
-				}
+				if(ParseID(line) == ID)
+					return ParseLevel(line);
 			}
 
 			reader.BaseStream.Position = remPosition;
+			return 0;
 		}
 
-		public void LoadNode (string NodeName)//przetestować // dla podanej nazwy wezla przeszukuje currentSubNodesList 
+		public Node GetNode (UInt32 ID)
 		{
-			if (subNodesList.Count <= 0)
-				return;
-
-			foreach (Node nod in subNodesList) 
-			{
-				if(NodeName == nod.name)
-				{
-					LoadNode(nod.nodeID);
-					break;
-				}
-			}
-		}
-
-		public void GoBack () //wstępne testy OK
-		{
-			if (prevNodesStack.Count < 1) {
-				level = 0;
-				currentNode = null;
-				prevNodesStack.Clear();
-				reader.BaseStream.Position = 0; // ustawienie readera na początek pliku (nie pytaj po co)
-				LoadSubNodesList (0);
-			} else {
-				int indexOfLast = prevNodesStack.Count-1;
-				currentNode = prevNodesStack[indexOfLast];
-				prevNodesStack.RemoveAt(indexOfLast);
-				level--;
-				LoadSubNodesList();
-				//LoadNode(currentNode.nodeID);
-			}
-		}
-
-		public void HardLoadNode (UInt32 ID) // PRZETESTOWAĆ
-		{
-			string line;
 			long remPosition = reader.BaseStream.Position;
 			reader.BaseStream.Position = 0;
 
+			string line;
+
 			while ((line = reader.ReadLine()) != null) 
 			{
-				if(ID == GetID(line))
-				{
-					Stack<Node> nodeStack = GetPrevNodesStack(ID); 
-
-					prevNodesStack.Clear();
-					subNodesList.Clear();
-
-					if(nodeStack.Count >= 1){
-						while(nodeStack.Count > 0){
-							prevNodesStack.Add(nodeStack.Pop());
-						}
-						prevNodesStack.Reverse();
-					}
-
-					level = GetLvl(line);
-					currentNode = GetNode(line);
-					LoadSubNodesList();
-					break;
+				if(ID == ParseID(line)){
+					reader.BaseStream.Position = remPosition;
+					return ParseNode(line);
 				}
 			}
 
 			reader.BaseStream.Position = remPosition;
+			return null;
 		}
 
-		//private:
-		private int CountTabs(string strLine) // przypadek szczegolny metody CountChars
+		public List<Node> GetPrevNodesList (UInt32 ID) //przetestowane wstepnie
 		{
-			if(!strLine.Contains("[")) return -1; // jeśli linia nie zawiera znaku'[' to uznaje ze jest błędna albo pusta
+			Stack<Node> stackNode = new Stack<Node> ();
 
-			int count = 0;
+			long remPosition = reader.BaseStream.Position; //zabezpieczyc przed reader bez sciezki do pliku
 
-			foreach(char c in strLine) 
+			reader.BaseStream.Position = 0;
+			string prevLine = reader.ReadLine ();
+			string line = prevLine;
+
+			List<Node> prevNodesList = new List<Node> ();
+
+			if (ParseID (line) == ID) 
+				return prevNodesList;
+
+			while ((line = reader.ReadLine()) != null) 
 			{
-				if(c=='\t') count++;
+				if (ParseLevel (line) > ParseLevel (prevLine)) 
+				{
+					stackNode.Push (ParseNode (prevLine));
+				} 
+				else if (ParseLevel (line) < ParseLevel (prevLine)) 
+				{
+					if (stackNode.Count >= 1)
+						stackNode.Pop ();
+				}
+			
+				if (ParseID (line) == ID) 
+					break;
+			
+				prevLine = line; 
 			}
-	
-			return count;
+
+			reader.BaseStream.Position = remPosition;
+
+			while (stackNode.Count > 0) {
+				prevNodesList.Add(stackNode.Pop());
+			}
+
+			prevNodesList.Reverse();
+
+			return prevNodesList;
 		}
 
+
+	//private:
+		//parsery:
 		private int CountChars (string strLine, char value) // alternatywa dla ContTabs
 		{
 			if(!strLine.Contains("[")) return -1; // jeśli linia nie zawiera znaku'[' to uznaje ze jest błędna albo pusta
@@ -225,43 +175,21 @@ namespace planerConsole_1
 
 			return count;
 		}
-
-		private UInt16 GetLvl (string line)
+		private int ParseLevel (string line)
 		{
-			return Convert.ToUInt16(CountChars(line, '-'));
+			return CountChars(line,'-');
 		}
-
-		private Node GetNodeFromFile (UInt32 ID)
-		{
-			long remPosition = reader.BaseStream.Position;
-			reader.BaseStream.Position = 0;
-
-			string line;
-
-			while ((line = reader.ReadLine()) != null) 
-			{
-				if(ID == GetID(line)){
-					reader.BaseStream.Position = remPosition;
-					return GetNode(line);
-				}
-			}
-
-			reader.BaseStream.Position = remPosition;
-			return null;
-		}
-
-		private Node GetNode (string line)
+		private Node ParseNode (string line)
 		{
 			Node newNode = new Node();
 
-			newNode.name = GetName(line);
-			newNode.nodeID = GetID(line);
-			newNode.state = GetState(line);
+			newNode.name = ParseName(line);
+			newNode.nodeID = ParseID(line);
+			newNode.state = ParseState(line);
 
 			return newNode;
 		}
-
-		private string GetName(string line) // zwraca nazwe węzła (parsuje linie dokopując się do nazwy ) (pomija zbedna znaki)
+		private string ParseName(string line) // zwraca nazwe węzła (parsuje linie dokopując się do nazwy ) (pomija zbedna znaki)
 		{
 			char[] parseChars = {'\t', '-', ' '}; // pomijane znaki
 			line = line.Trim(parseChars);
@@ -272,7 +200,7 @@ namespace planerConsole_1
 			else return null;
 
 		}
-		private UInt32 GetID (string line)
+		private UInt32 ParseID (string line)
 		{
 			char[] parseChars = {'\t', '-', ' '};
 			line = line.Trim(parseChars);
@@ -282,7 +210,7 @@ namespace planerConsole_1
 			if(end>0) return UInt32.Parse(line.Substring(0,end));
 			else return 0;
 		}
-		private StateOfNode GetState (string line)
+		private StateOfNode ParseState (string line)
 		{
 			char[] parseChars = {'\t', '-', ' '};
 
@@ -320,7 +248,7 @@ namespace planerConsole_1
 
 			while ((line = reader.ReadLine()) != null) 
 			{
-				if(GetID(line) == ID) return;
+				if(ParseID(line) == ID) return;
 			}
 
 			reader.BaseStream.Position = 0;
@@ -334,7 +262,7 @@ namespace planerConsole_1
 
 			while ((line = reader.ReadLine()) != null) 
 			{
-				if(GetID(line) == nod.nodeID) return;
+				if(ParseID(line) == nod.nodeID) return;
 			}
 
 			reader.BaseStream.Position = 0;
@@ -342,17 +270,17 @@ namespace planerConsole_1
 
 		private UInt32 FindMaxNodeID ()
 		{
-			long remPosition = reader.BaseStream.Position;
-			//zabezpieczyc przed reader bez sciezki do pliku
+			long remPosition = reader.BaseStream.Position; //zabezpieczyc przed reader bez sciezki do pliku
+			
 			reader.BaseStream.Position = 0;
 			string line;
 			UInt32 maxID = 0;
 
 			while ((line = reader.ReadLine()) != null) 
 			{
-				if(GetID(line) >= maxID)
+				if(ParseID(line) >= maxID)
 				{
-					maxID = GetID(line);
+					maxID = ParseID(line);
 				}
 			}
 
@@ -361,39 +289,5 @@ namespace planerConsole_1
 			return maxID;
 		}
 
-		private Stack<Node> GetPrevNodesStack (UInt32 ID) //przetestowane wstepnie
-		{
-			Stack<Node> stackNode = new Stack<Node> ();
-			//zabezpieczyc przed reader bez sciezki do pliku
-			long remPosition = reader.BaseStream.Position;
-			reader.BaseStream.Position = 0;
-			string prevLine = reader.ReadLine ();
-			string line = prevLine;
-
-			if (GetID (line) == ID) {
-				reader.BaseStream.Position = remPosition;
-				return stackNode;}
-
-			while ((line = reader.ReadLine()) != null) 
-			{
-				if(GetLvl(line) > GetLvl(prevLine))
-				{
-					stackNode.Push(GetNode(prevLine));
-				}
-				else if(GetLvl(line) < GetLvl(prevLine))
-				{
-					if(stackNode.Count >= 1) stackNode.Pop();
-				}
-			
-				if(GetID(line) == ID){
-					reader.BaseStream.Position = remPosition;
-					return stackNode;}
-			
-				prevLine = line; 
-			}
-
-			reader.BaseStream.Position = remPosition;
-			return stackNode;
-		}
 	}
 }
