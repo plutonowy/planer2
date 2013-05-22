@@ -13,34 +13,57 @@ namespace planerConsole_1
 	{
 		public string name;
 		public StateOfNode state;
-		public UInt32 nodeID;
+		private UInt32 ID;
 		public int Level;
 
 		public Node ()
 		{
 			this.name = null;
 			this.state = StateOfNode.uncompleted;
-			this.nodeID = 0;
 		}
 
-		public Node (string newName, StateOfNode newState, UInt32 newNodeID, int newLevel)
+		public Node (string newName, StateOfNode newState, UInt32 newID ,int newLevel)
 		{
 			this.name = newName;
 			this.state = newState;
-			this.nodeID = newNodeID;
+			this.Level = newLevel;
+			this.ID = newID;
+		}
+
+		public Node (string newName, StateOfNode newState, int newLevel)
+		{
+			this.name = newName;
+			this.state = newState;
 			this.Level = newLevel;
 		}
 
-		public void SetNodeID(UInt32 newNodeID)
+		public Node (string newName, StateOfNode newState)
 		{
-			this.nodeID = newNodeID;
+			this.name = newName;
+			this.state = newState;
+		}
+
+		public Node (string newName)
+		{
+			this.name = newName;
+			this.state = StateOfNode.uncompleted;
+		}
+
+		public void SetID(UInt32 newNodeID)
+		{
+			this.ID = newNodeID;
+		}
+
+		public UInt32 GetID ()
+		{
+			return this.ID;
 		}
 
 		public override string ToString ()
 		{
 			string NodeToString;
 
-			string string_ID = this.nodeID.ToString ();
+			string string_ID = this.ID.ToString ();
 			string string_level = "";
 
 			char char_state;
@@ -59,7 +82,11 @@ namespace planerConsole_1
 				char_state = '0';
 				break;
 			}
-
+			//===================DO WYJEBANIA===================== tylko wizualny komfort pliku-> do NICZEGO więcej
+			for (int i=0; i<this.Level; i++) {
+				string_level += '\t';
+			}
+			//===================DO WYJEBANIA=====================
 			for (int i=0; i<this.Level; i++) {
 				string_level += '-';
 			}

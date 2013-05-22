@@ -8,12 +8,12 @@ namespace planerConsole_1
 	{
 
 // variables
-		public string filePath;
 
-	//private:
-		private StreamReader reader;
-		//private UInt32 maxNodeID; // aktualny najwyzszy ID node (potrzebne do tworzenia nowych wezlow i nadawania im ID)
-		private StreamWriter writer;
+		private string filePath;
+		private readonly string tmpFilePath = @"tmpFile.txt";
+		private StreamReader reader; // pozbyć się writera i readera -> tworzyć je za każdym razem gdy są operacje na plikach
+		private StreamWriter writer; // porawność sciezki sprawdzać File.Exist(path)
+
 
 // methods:
 		public Model ()
@@ -23,15 +23,20 @@ namespace planerConsole_1
 
 		public Model (string path) // ustawia path odrazu przy wywołaniu;
 		{
-			filePath=path;
+			filePath=path;;
 			reader = new StreamReader(this.filePath);
+			this.writer = new StreamWriter(this.tmpFilePath, false);
 		}
 
 		public void SetFilePath(string path)
 		{
 			this.filePath = path;
 			this.reader = new StreamReader(this.filePath);
-			this.writer = new StreamWriter(".tmpModel.txt", false);
+		}
+
+		public string FilePath ()
+		{
+			return this.filePath;
 		}
 
 		public List<Node> GetSubNodesList (UInt32 ID) // PRZETESTOWAĆ!!!
@@ -91,7 +96,10 @@ namespace planerConsole_1
 			while ((line = reader.ReadLine()) != null) 
 			{
 				if(ParseID(line) == ID)
+				{
+					reader.BaseStream.Position = remPosition;
 					return ParseLevel(line);
+				}
 			}
 
 			reader.BaseStream.Position = remPosition;
@@ -129,9 +137,10 @@ namespace planerConsole_1
 
 			List<Node> prevNodesList = new List<Node> ();
 
-			if (ParseID (line) == ID) 
+			if (ParseID (line) == ID) {
+				reader.BaseStream.Position = remPosition;
 				return prevNodesList;
-
+			}
 			while ((line = reader.ReadLine()) != null) 
 			{
 				if (ParseLevel (line) > ParseLevel (prevLine)) 
@@ -158,9 +167,75 @@ namespace planerConsole_1
 
 			prevNodesList.Reverse();
 
+			reader.BaseStream.Position = remPosition;
 			return prevNodesList;
 		}
 
+		public void Save (Node NodeToSave)
+		{
+			reader.BaseStream.Position = 0;
+
+			string line;
+			reader.DiscardBufferedData();
+			while ((line = reader.ReadLine()) != null) 
+			{
+				if (ParseID(line) == NodeToSave.GetID()) 
+				{
+					line = NodeToSave.ToString ();
+				}
+
+				writer.WriteLine (line);
+			}
+
+			reader.BaseStream.Position=0;
+
+			ReloadStreams();
+		}
+
+		public void Delete (UInt32 ID)
+		{
+			reader.BaseStream.Position = 0;
+
+			string line;
+			reader.DiscardBufferedData ();
+			while ((line = reader.ReadLine()) != null) 
+			{
+				if(ParseID(line) != ID)
+					writer.WriteLine(line);
+			}
+
+			ReloadStreams();
+		}
+
+		public void NewNode (UInt32 ParentID, Node NewNodeToSave)
+		{
+			reader.BaseStream.Position = 0;
+			//writer.BaseStream.Position = 0;
+
+			NewNodeToSave.SetID(AssignNewID());
+			NewNodeToSave.Level = GetLvl(ParentID) + 1;
+			string newLineToWrite = NewNodeToSave.ToString ();
+
+			string line;
+			reader.DiscardBufferedData();
+			while ((line = reader.ReadLine()) != null) 
+			{
+				writer.WriteLine(line);
+
+				if(ParseID(line) == ParentID)
+				{
+					writer.WriteLine(newLineToWrite);
+				}
+			}
+
+			ReloadStreams();
+		}
+
+		public void Close ()
+		{
+			reader.Close();
+			writer.Close();
+		}
 
 	//private:
 		//parsery:
@@ -185,7 +260,7 @@ namespace planerConsole_1
 			Node newNode = new Node();
 
 			newNode.name = ParseName(line);
-			newNode.nodeID = ParseID(line);
+			newNode.SetID(ParseID(line));
 			newNode.state = ParseState(line);
 			newNode.Level = ParseLevel(line);
 
@@ -264,7 +339,7 @@ namespace planerConsole_1
 
 			while ((line = reader.ReadLine()) != null) 
 			{
-				if(ParseID(line) == nod.nodeID) return;
+				if(ParseID(line) == nod.GetID()) return;
 			}
 
 			reader.BaseStream.Position = 0;
@@ -287,9 +362,32 @@ namespace planerConsole_1
 			}
 
 			reader.BaseStream.Position = remPosition;
-
 			return maxID;
 		}
 
+		private UInt32 AssignNewID ()
+		{
+			return FindMaxNodeID() + 1;
+		}
+
+		private void ReloadStreams ()
+		{
+			string line;
+
+			reader.Close ();
+			writer.Close ();
+			reader = new StreamReader (this.tmpFilePath);
+			writer = new StreamWriter (this.filePath, false);
+
+			while ((line=reader.ReadLine()) != null) 
+			{
+				writer.WriteLine(line);
+			}
+			reader.Close();
+			writer.Close();
+
+			reader = new StreamReader(this.filePath);
+			writer = new StreamWriter(this.tmpFilePath, false);
+		}
 	}
 }
