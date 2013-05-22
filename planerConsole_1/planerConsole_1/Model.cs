@@ -13,7 +13,7 @@ namespace planerConsole_1
 	//private:
 		private StreamReader reader;
 		//private UInt32 maxNodeID; // aktualny najwyzszy ID node (potrzebne do tworzenia nowych wezlow i nadawania im ID)
-		//private StreamWriter writer;
+		private StreamWriter writer;
 
 // methods:
 		public Model ()
@@ -31,6 +31,7 @@ namespace planerConsole_1
 		{
 			this.filePath = path;
 			this.reader = new StreamReader(this.filePath);
+			this.writer = new StreamWriter(".tmpModel.txt", false);
 		}
 
 		public List<Node> GetSubNodesList (UInt32 ID) // PRZETESTOWAĆ!!!
@@ -42,7 +43,7 @@ namespace planerConsole_1
 			string line;
 			List<Node> subNodesList = new List<Node>();
 
-			int subLevel = GetLvl(ID)+1; // level podwięzłów węzła ID
+			int subLevel = GetNode(ID).Level+1; // level podwięzłów węzła ID
 
 			while ((line=reader.ReadLine()) != null) 
 			{
@@ -186,6 +187,7 @@ namespace planerConsole_1
 			newNode.name = ParseName(line);
 			newNode.nodeID = ParseID(line);
 			newNode.state = ParseState(line);
+			newNode.Level = ParseLevel(line);
 
 			return newNode;
 		}

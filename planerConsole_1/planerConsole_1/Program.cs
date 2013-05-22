@@ -8,7 +8,9 @@ namespace planerConsole_1
 		public static void Main (string[] args)
 		{
 			//TESTOWANIE TUTAJ ;)
+			Node nod = new Node("NAZWA", StateOfNode.uncompleted, 15, 0);
 
+			Console.WriteLine(nod.ToString());
 			//TESTOWANIE TUTAJ ;)
 			Console.ReadLine();
 		}
