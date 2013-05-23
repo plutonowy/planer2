@@ -65,7 +65,7 @@ namespace planerConsole_1
 			return subNodesList;
 		}
 
-		public List<Node> GetSubNodesList (int level) // PRZETESTOWAĆ!!||przeladowanie robi tosamo z tym ze wpisuje WSZYSTKIE nazwy podwezłow (z danego poziomu lvl) do currentSubNodesList
+		public List<Node> GetNodesList (int level) // PRZETESTOWAĆ!!||przeladowanie robi tosamo z tym ze wpisuje WSZYSTKIE nazwy podwezłow (z danego poziomu lvl) do currentSubNodesList
 		{
 			long remPosition = reader.BaseStream.Position; // zabezpieczyć przed reader bez sciezki
 			reader.BaseStream.Position = 0; // tutaj przeszukiwany jest caly plik
@@ -86,7 +86,7 @@ namespace planerConsole_1
 			return subNodesList;
 		}
 
-		public int GetLvl (UInt32 ID)
+		public int GetLevel (UInt32 ID)
 		{
 			long remPosition = reader.BaseStream.Position;
 
