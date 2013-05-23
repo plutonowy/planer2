@@ -23,15 +23,25 @@ namespace planerConsole_1
 
 		public Model (string path) // ustawia path odrazu przy wywołaniu;
 		{
-			filePath=path;;
-			reader = new StreamReader(this.filePath);
-			this.writer = new StreamWriter(this.tmpFilePath, false);
+			if(!File.Exists(path)) throw new FileNotFoundException(path);
+
+			filePath = path;
+			this.reader = new StreamReader (this.filePath);
+			this.writer = new StreamWriter (this.tmpFilePath, false);
+		}
+
+		~Model()
+		{
+			this.Close();
 		}
 
 		public void SetFilePath(string path)
 		{
+			if(!File.Exists(path)) throw new FileNotFoundException(path);
+
 			this.filePath = path;
 			this.reader = new StreamReader(this.filePath);
+			this.writer = new StreamWriter (this.tmpFilePath, false);
 		}
 
 		public string FilePath ()
@@ -84,26 +94,6 @@ namespace planerConsole_1
 
 			reader.BaseStream.Position = remPosition; // ustawia reader tak jak był przed wywołaniem funkcji
 			return subNodesList;
-		}
-
-		public int GetLevel (UInt32 ID)
-		{
-			long remPosition = reader.BaseStream.Position;
-
-			reader.BaseStream.Position = 0;
-
-			string line;
-			while ((line = reader.ReadLine()) != null) 
-			{
-				if(ParseID(line) == ID)
-				{
-					reader.BaseStream.Position = remPosition;
-					return ParseLevel(line);
-				}
-			}
-
-			reader.BaseStream.Position = remPosition;
-			return 0;
 		}
 
 		public Node GetNode (UInt32 ID)
@@ -213,10 +203,11 @@ namespace planerConsole_1
 			//writer.BaseStream.Position = 0;
 
 			NewNodeToSave.SetID(AssignNewID());
-			NewNodeToSave.Level = GetLvl(ParentID) + 1;
+			NewNodeToSave.Level = GetLevel(ParentID) + 1;
 			string newLineToWrite = NewNodeToSave.ToString ();
 
 			string line;
+
 			reader.DiscardBufferedData();
 			while ((line = reader.ReadLine()) != null) 
 			{
@@ -231,8 +222,23 @@ namespace planerConsole_1
 			ReloadStreams();
 		}
 
+		public void NewNode (bool First, Node NewNodeToSave)
+		{
+			if(reader.BaseStream.Length != 0) return; 
+
+			NewNodeToSave.Level=0;
+			NewNodeToSave.SetID(0);
+
+			string lineToWrite = NewNodeToSave.ToString();
+
+			writer.WriteLine(lineToWrite);
+
+			ReloadStreams();
+		}
+
 		public void Close ()
 		{
+			File.Delete(this.tmpFilePath);
 			reader.Close();
 			writer.Close();
 		}
@@ -343,6 +349,26 @@ namespace planerConsole_1
 			}
 
 			reader.BaseStream.Position = 0;
+		}
+
+		private int GetLevel (UInt32 ID)
+		{
+			long remPosition = reader.BaseStream.Position;
+
+			reader.BaseStream.Position = 0;
+
+			string line;
+			while ((line = reader.ReadLine()) != null) 
+			{
+				if(ParseID(line) == ID)
+				{
+					reader.BaseStream.Position = remPosition;
+					return ParseLevel(line);
+				}
+			}
+
+			reader.BaseStream.Position = remPosition;
+			return 0;
 		}
 
 		private UInt32 FindMaxNodeID ()
