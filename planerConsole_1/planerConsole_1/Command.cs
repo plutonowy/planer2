@@ -55,7 +55,10 @@ namespace planerConsole_1
 				if(tmp.name == args[1])
 				{
 					DestroyChildren(tmp);
-					con.subNodesList = mod.GetSubNodesList(con.currentNode.GetID());
+					if(con.currentLvl==0)
+						con.subNodesList = mod.GetSubNodesList(0);
+					else
+						con.subNodesList = mod.GetSubNodesList(con.currentNode.GetID());
 				}
 			}
 		}
