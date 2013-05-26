@@ -41,14 +41,39 @@ namespace planerConsole_1
 
 	public class CommandDEL : Command
 	{
-		public Model mod;
-		public CommandDEL (Model mod) : base("del", "usuwanie podwezla: del <nazwa>", 1)
+		private Model mod;
+		private Controller con;
+		public CommandDEL (Model mod, Controller con) : base("del", "usuwanie podwezla: del <nazwa>", 1)
 		{
 			this.mod = mod;
+			this.con = con;
 		}
-		public override void realizeCommand(params string[] args)
+		public override void realizeCommand (params string[] args)
 		{
-			
+			foreach (Node tmp in con.subNodesList) 
+			{
+				if(tmp.name == args[1])
+				{
+					DestroyChildren(tmp);
+					con.subNodesList = mod.GetSubNodesList(con.currentNode.GetID());
+				}
+			}
+		}
+		void DestroyChildren (Node current)
+		{
+			List<Node> children = mod.GetSubNodesList (current.GetID ());
+			if (children.Count == 0)
+				mod.Delete (current.GetID());
+			else 
+			{
+				foreach(Node tmp in children)
+				{
+					DestroyChildren(tmp);
+					children = mod.GetSubNodesList(current.GetID());
+				}
+				DestroyChildren(current);
+			}
+
 		}
 	}
 
@@ -70,7 +95,6 @@ namespace planerConsole_1
 				mod.NewNode(con.currentNode.GetID(),newNode);
 			else mod.NewNode(true,newNode);
 			con.subNodesList.Add(newNode);
-			mod.Save(newNode);
 		}
 	}
 
@@ -97,7 +121,6 @@ namespace planerConsole_1
 				}
 			}
 			View.WriteMessage("nie ma takiego podwezla");
-
 		}
 	}
 

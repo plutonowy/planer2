@@ -31,7 +31,7 @@ namespace planerConsole_1
 			commandList.Add(new CommandCN(mod,this));
 			commandList.Add(new CommandCS(mod,this));
 			commandList.Add (new CommandADD(mod, this));
-			commandList.Add (new CommandDEL(mod));
+			commandList.Add (new CommandDEL(mod,this));
 			commandList.Add(new CommandPRGS(mod,this));
 		
 			//pozostale komendy
