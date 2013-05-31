@@ -48,7 +48,7 @@ namespace planerConsole_1
 		{
 			long remPosition = reader.BaseStream.Position; // zapamiętanie by pod koniec operacji ustawić reader spowrotem na tej samej pozycji
 			//zabespieczyć reader przed brakiem sciezki
-
+			reader.DiscardBufferedData(); 
 			SetReaderOn(ID); // zabezpieczyć przed wart null
 			string line;
 			List<Node> subNodesList = new List<Node>();
@@ -77,7 +77,7 @@ namespace planerConsole_1
 
 			string line;
 			List<Node> subNodesList = new List<Node>();
-
+			reader.DiscardBufferedData();
 			while((line = reader.ReadLine()) != null)
 			{
 				if(ParseLevel(line) == level)
@@ -97,7 +97,7 @@ namespace planerConsole_1
 			reader.BaseStream.Position = 0;
 
 			string line;
-
+			reader.DiscardBufferedData();
 			while ((line = reader.ReadLine()) != null) 
 			{
 				if(ID == ParseID(line)){
@@ -116,6 +116,7 @@ namespace planerConsole_1
 
 			long remPosition = reader.BaseStream.Position; //zabezpieczyc przed reader bez sciezki do pliku
 
+			reader.DiscardBufferedData();
 			reader.BaseStream.Position = 0;
 			string prevLine = reader.ReadLine ();
 			string line = prevLine;

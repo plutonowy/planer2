@@ -73,7 +73,8 @@ namespace planerConsole_1
 								"chState <name> <completed/uncompleted> \t zmiana stanu wezla 'name' na completed/uncompleted" +
 			                  "\nchName <name> <newName> \t zmiana nazwy wezla 'name' na 'newName'" +
 			                  "\nadd <name> \t tworzenie wezla 'name'" +
-			                  "\ndel <name> \t usuwanie wezla 'name'");
+			                  "\ndel <name> \t usuwanie wezla 'name'" +
+			                  "\nprogress \t wyswietla progres cuurent wezla");
 		}
 		private void Ls ()
 		{
@@ -96,10 +97,14 @@ namespace planerConsole_1
 			Console.ForegroundColor = ConsoleColor.White;
 		}
 
-		private void Progress()
+		private void Progress () // zrobic procent!!
 		{
-			float prog = C.mod.GetProgres(C.currentNode.GetID());
-			Console.WriteLine("postep dla {0}: {1}%",C.currentNode.name,prog*100);
+			if (C.currentNode != null)
+			{
+				float prog = C.mod.GetProgres (C.currentNode.GetID ()) * 100;
+				int prog2 = Convert.ToInt16(prog); // zmiana float na int
+				Console.WriteLine ("postep dla {0}: {1}%", C.currentNode.name, prog2);
+			}
 		}
 
 		private void SetColor(StateOfNode state)

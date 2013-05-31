@@ -43,18 +43,16 @@ namespace planerConsole_1
 		{
 			if (args [1] == "..") 
 			{
-				if(prevSubNodesList.Count<1)
+				if(prevSubNodesList.Count>0)
 				{		
-					currentNode = null;
-					prevSubNodesList.Clear();
-					subNodesList = mod.GetNodesList(0);
+					int lastNode = prevSubNodesList.Count-1;
+					this.currentNode = mod.GetNode(prevSubNodesList[lastNode].GetID());
+					ReloadLists();
 				}
 				else
 				{				
-					int lastNode = prevSubNodesList.Count-1;
-					currentNode = prevSubNodesList[lastNode];
-					prevSubNodesList = mod.GetPrevNodesList(currentNode.GetID());
-					subNodesList = mod.GetSubNodesList(currentNode.GetID());
+					this.currentNode = null;
+					ReloadLists();
 				}
 			}
 			else
@@ -66,8 +64,7 @@ namespace planerConsole_1
 					{
 						currentNode = temp;
 				
-						subNodesList=mod.GetSubNodesList(temp.GetID());
-						prevSubNodesList = mod.GetPrevNodesList(temp.GetID());
+						ReloadLists();
 						break;
 					}
 				}
@@ -83,7 +80,7 @@ namespace planerConsole_1
 				{
 					temp.name = newName;
 					mod.Save(temp);
-					subNodesList = mod.GetSubNodesList(currentNode.GetID());
+					ReloadLists();
 					return;
 				}
 			}
@@ -104,7 +101,7 @@ namespace planerConsole_1
 						default: break;
 					}
 					mod.Save(temp);
-					subNodesList = mod.GetSubNodesList(currentNode.GetID());
+					ReloadLists();
 					return;
 				}
 			}
@@ -153,6 +150,19 @@ namespace planerConsole_1
 					children = mod.GetSubNodesList(current.GetID());
 				}
 				DestroyChildren(current);
+			}
+		}
+
+		private void ReloadLists ()
+		{
+			if (currentNode != null)
+			{
+				subNodesList = mod.GetSubNodesList (currentNode.GetID ());
+				prevSubNodesList = mod.GetPrevNodesList (currentNode.GetID ());
+			}
+			else 
+			{
+				subNodesList = mod.GetNodesList(0);
 			}
 		}
 	}
