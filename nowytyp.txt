@@ -11,6 +11,3 @@
 			---5[podcel1.2.2,0]	
 		--6[podcel1.3,0]
 		--7[podcel1.4,0]
-	-8[podcel2,0]
-		--9[podcel2.1,0]
-		--10[podcel2.2,0]

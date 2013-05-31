@@ -10,8 +10,8 @@ namespace planerConsole_1
 			Console.WriteLine ("Hello World!");
 
 			//TESTOWANIE TUTAJ ;)
-			Model mod = new Model ("/home/kamil/Desktop/repositories/connector/nowytyp.txt");
-			Controller conductor = new Controller (mod);
+			//Model mod = new Model ("/home/kamil/Desktop/repositories/planer2/nowytyp.txt");
+			Controller conductor = new Controller ("/home/kamil/Desktop/repositories/planer2/nowytyp.txt");
 			while (true) 
 			{
 				Console.Write(":>> ");
