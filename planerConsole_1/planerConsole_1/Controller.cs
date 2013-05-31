@@ -83,11 +83,11 @@ namespace planerConsole_1
 				{
 					temp.name = newName;
 					mod.Save(temp);
-					currentNode = temp;
+					subNodesList = mod.GetSubNodesList(currentNode.GetID());
 					return;
 				}
 			}
-			//View.WriteMessage("nie ma takiego podwezla");
+
 
 
 		}
@@ -104,7 +104,7 @@ namespace planerConsole_1
 						default: break;
 					}
 					mod.Save(temp);
-					currentNode = temp;
+					subNodesList = mod.GetSubNodesList(currentNode.GetID());
 					return;
 				}
 			}
