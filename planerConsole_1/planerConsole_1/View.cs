@@ -22,6 +22,7 @@ namespace planerConsole_1
 				sw.Close ();
 
 				C = new Controller(filePath);
+				Console.Write(">>:");
 			}
 			else
 			{
@@ -62,7 +63,8 @@ namespace planerConsole_1
 				break;
 			}
 
-			Console.WriteLine("{0}>>:", C.currentNode.name);
+			if(C.currentNode != null)Console.WriteLine("{0}>>:", C.currentNode.name);
+			else Console.Write(">>:");
 		}
 
 		private void Help()
