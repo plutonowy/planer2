@@ -6,33 +6,47 @@ namespace planerConsole_1
 {
 	public class View
 	{
+		public Controller C;
+
 		public View ()
 		{
 	
 		}
-		static public void WriteMessage(string txt)
-		{
-			Console.WriteLine(txt);
-		}
 
-		static public void DisplaySubNodesList (List<Node> subNodes)
+		public void Input (string line)
 		{
-			foreach (Node temp in subNodes) 
+			string[] inputTable = line.Split (' ');
+
+			switch (inputTable [0]) 
 			{
-				Console.Write("{0}({1})\t",temp.name, temp.state);
+				case "Help": Help (); break;
+				case "Ls" : Ls(); break;
+				default: break;
 			}
-			Console.WriteLine();
 		}
 
-		static public void DisplayPrevSubNodesList(List<Node> prevNodes)
+		private void Help()
 		{
-			foreach (Node temp in prevNodes) 
+			Console.WriteLine("Cd <name> \t przechodzenie do wezle 'name'\nLs \t wyswietlanie" +"podcelow\n" +
+								"ChState <name> <completed/uncompleted> \t zmiana stanu wezla 'name' na completed/uncompleted" +
+			                  "\nChName <name> <newName> \t zmiana nazwy wezla 'name' na 'newName'" +
+			                  "\nAddNode <name> \t tworzenie wezla 'name'" +
+			                  "\nDelNode <name> \t usuwanie wezla 'name'");
+		}
+		private void Ls ()
+		{
+			Console.WriteLine("{0}:",C.currentNode.name);
+			foreach (Node tmp in C.subNodesList) 
 			{
-				Console.Write("{0}({1})\t",temp.name, temp.state);
+				Console.WriteLine("\t{0}({1})",tmp.name,tmp.state);
 			}
-			Console.WriteLine();
 		}
 
+		private void Progress()
+		{
+			float prog = C.mod.GetProgres(C.currentNode.GetID());
+			Console.WriteLine("postep dla {0}: {1}%",C.currentNode.name,prog*100);
+		}
 	}
 }
 
