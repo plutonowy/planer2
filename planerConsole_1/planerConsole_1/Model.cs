@@ -30,11 +30,6 @@ namespace planerConsole_1
 			this.writer = new StreamWriter (this.tmpFilePath, false);
 		}
 
-		~Model()
-		{
-			this.Close();
-		}
-
 		public void SetFilePath(string path)
 		{
 			if(!File.Exists(path)) throw new FileNotFoundException(path);
@@ -224,16 +219,35 @@ namespace planerConsole_1
 
 		public void NewNode (bool First, Node NewNodeToSave)
 		{
-			if(reader.BaseStream.Length != 0) return; 
-
 			NewNodeToSave.Level=0;
-			NewNodeToSave.SetID(0);
+			if(reader.BaseStream.Length != 0) NewNodeToSave.SetID(AssignNewID());
+			else NewNodeToSave.SetID(0);
 
 			string lineToWrite = NewNodeToSave.ToString();
 
+			string line;
+			reader.BaseStream.Position = 0;
+			reader.DiscardBufferedData();
+			writer.BaseStream.Position=0;
+
 			writer.WriteLine(lineToWrite);
 
+			while ((line = reader.ReadLine()) != null) 
+			{
+				writer.WriteLine(line);
+			}
+
 			ReloadStreams();
+		}
+
+		public float GetProgres(UInt32 ID)
+		{
+			float progress=0;
+			int completed = CountSubTreeElements(ID, StateOfNode.completed);
+			int dontcare = CountSubTreeElements(ID, StateOfNode.dontcare);
+			int all = CountSubTreeElements(ID);
+			progress = ( ( completed+dontcare )/all );
+			return progress;
 		}
 
 		public void Close ()
@@ -414,6 +428,82 @@ namespace planerConsole_1
 
 			reader = new StreamReader(this.filePath);
 			writer = new StreamWriter(this.tmpFilePath, false);
+		}
+
+		private int CountSubTreeElements (UInt32 headID)
+		{
+			int currentlevel = GetLevel (headID);
+
+			long remPosition = reader.BaseStream.Position;
+			SetReaderOn (headID);
+			string line;
+
+			int count=0;
+
+			while ((line=reader.ReadLine()) != null) 
+			{
+				if(ParseLevel(line) > currentlevel)
+				{
+					count++;
+				}
+				else break;
+			}
+
+			reader.BaseStream.Position = remPosition;
+			return count;
+		}
+
+		private int CountSubTreeElements(UInt32 headID, StateOfNode state)
+		{
+			int currentlevel = GetLevel (headID);
+
+			long remPosition = reader.BaseStream.Position;
+			SetReaderOn (headID);
+			string line;
+
+			int count=0;
+
+			while ((line=reader.ReadLine()) != null) 
+			{
+				if((ParseLevel(line) > currentlevel) && ParseState(line) == state)
+				{
+					count++;
+				}
+				else break;
+			}
+
+			reader.BaseStream.Position = remPosition;
+			return count;
+		}
+
+		public void ChangeStateOfAllSubNodes (UInt32 headID, StateOfNode fromState, StateOfNode toState)
+		{
+			int currentLevel = GetLevel (headID);
+			long remPositoin = reader.BaseStream.Position;
+			SetReaderOn (headID);
+			string line;
+
+			List<UInt32> lista = new List<uint>();
+
+			while ((line = reader.ReadLine()) != null) 
+			{
+				if(ParseLevel(line) > currentLevel)
+				{
+					if(ParseState(line) == fromState)
+						lista.Add(ParseID(line));
+				}
+				else break;
+			}
+
+
+			foreach(UInt32 currID in lista)
+			{
+				Node nod = GetNode(currID);
+				nod.state = toState;
+				Save(nod);
+			}
+
+			reader.BaseStream.Position = remPositoin;
 		}
 	}
 }
