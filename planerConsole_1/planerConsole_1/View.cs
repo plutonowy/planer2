@@ -77,19 +77,45 @@ namespace planerConsole_1
 		}
 		private void Ls ()
 		{
-			if(C.currentNode != null)
-				Console.WriteLine("{0}:",C.currentNode.name);
+			if (C.currentNode != null) 
+			{
+				SetColor (C.currentNode.state);
+				Console.WriteLine ("{0}:", C.currentNode.name);
+				Console.ForegroundColor = ConsoleColor.White;
+			}
 
 			foreach (Node tmp in C.subNodesList) 
 			{
+				SetColor(tmp.state);
+
 				Console.WriteLine("\t{0}({1})",tmp.name,tmp.state);
+
+				Console.ForegroundColor = ConsoleColor.White;
 			}
+
+			Console.ForegroundColor = ConsoleColor.White;
 		}
 
 		private void Progress()
 		{
 			float prog = C.mod.GetProgres(C.currentNode.GetID());
 			Console.WriteLine("postep dla {0}: {1}%",C.currentNode.name,prog*100);
+		}
+
+		private void SetColor(StateOfNode state)
+		{
+			switch(state)
+				{
+				case StateOfNode.completed:
+					Console.ForegroundColor = ConsoleColor.DarkGreen;
+					break;
+				case StateOfNode.dontcare:
+					Console.ForegroundColor = ConsoleColor.Cyan;
+					break;
+				default:
+					Console.ForegroundColor = ConsoleColor.White;
+					break;
+				}
 		}
 	}
 }
