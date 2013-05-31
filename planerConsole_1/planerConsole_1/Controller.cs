@@ -5,7 +5,7 @@ namespace planerConsole_1
 {
 	public class Controller
 	{
-		public List<Command> commandList;
+		//public List<Command> commandList;
 		public Model mod;
 		public List<Node> subNodesList;
 		public List<Node> prevSubNodesList;
@@ -19,11 +19,11 @@ namespace planerConsole_1
 			currentNode = null;
 			currentLvl = 0;
 
-			commandList = new List<Command>();
+//			commandList = new List<Command>();
 			this.mod = mod;
-			initCommandlist();
+//			initCommandlist();
 		}
-
+/*
 		public void initCommandlist()
 		{
 			commandList.Add (new CommandLS(this));
@@ -37,7 +37,7 @@ namespace planerConsole_1
 			//pozostale komendy
 			commandList.Add (new CommandHELP(this));
 		}
-
+*/
 		public void controllerInput (string input)
 		{
 			string[] inputTable = input.Split (' ');
