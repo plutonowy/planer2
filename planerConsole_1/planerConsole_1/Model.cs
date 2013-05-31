@@ -73,11 +73,11 @@ namespace planerConsole_1
 		public List<Node> GetNodesList (int level) // PRZETESTOWAĆ!!||przeladowanie robi tosamo z tym ze wpisuje WSZYSTKIE nazwy podwezłow (z danego poziomu lvl) do currentSubNodesList
 		{
 			long remPosition = reader.BaseStream.Position; // zabezpieczyć przed reader bez sciezki
+			reader.DiscardBufferedData();
 			reader.BaseStream.Position = 0; // tutaj przeszukiwany jest caly plik
-
 			string line;
 			List<Node> subNodesList = new List<Node>();
-			reader.DiscardBufferedData();
+
 			while((line = reader.ReadLine()) != null)
 			{
 				if(ParseLevel(line) == level)
@@ -94,10 +94,11 @@ namespace planerConsole_1
 		public Node GetNode (UInt32 ID)
 		{
 			long remPosition = reader.BaseStream.Position;
+			reader.DiscardBufferedData();
 			reader.BaseStream.Position = 0;
 
 			string line;
-			reader.DiscardBufferedData();
+
 			while ((line = reader.ReadLine()) != null) 
 			{
 				if(ID == ParseID(line)){
@@ -159,10 +160,11 @@ namespace planerConsole_1
 
 		public void Save (Node NodeToSave)
 		{
+			reader.DiscardBufferedData();
 			reader.BaseStream.Position = 0;
 
 			string line;
-			reader.DiscardBufferedData();
+
 			while ((line = reader.ReadLine()) != null) 
 			{
 				if (ParseID(line) == NodeToSave.GetID()) 
@@ -180,10 +182,11 @@ namespace planerConsole_1
 
 		public void Delete (UInt32 ID)
 		{
+			reader.DiscardBufferedData ();
 			reader.BaseStream.Position = 0;
 
 			string line;
-			reader.DiscardBufferedData ();
+
 			while ((line = reader.ReadLine()) != null) 
 			{
 				if(ParseID(line) != ID)
@@ -227,8 +230,9 @@ namespace planerConsole_1
 			string lineToWrite = NewNodeToSave.ToString();
 
 			string line;
-			reader.BaseStream.Position = 0;
 			reader.DiscardBufferedData();
+			reader.BaseStream.Position = 0;
+
 			writer.BaseStream.Position=0;
 
 			writer.WriteLine(lineToWrite);
@@ -246,8 +250,10 @@ namespace planerConsole_1
 			float progress=0;
 			int completed = CountSubTreeElements(ID, StateOfNode.completed);
 			int dontcare = CountSubTreeElements(ID, StateOfNode.dontcare);
+			completed+=dontcare;
 			int all = CountSubTreeElements(ID);
-			progress = ( ( completed+dontcare )/all );
+			if(all != 0) 
+				progress = ((float)completed/(float)all);
 			return progress;
 		}
 
@@ -340,6 +346,7 @@ namespace planerConsole_1
 
 		private void SetReaderOn (UInt32 ID) // ustawia reader w pliku na koniec lini w kotrej z węzłem o podanym ID 
 		{
+			reader.DiscardBufferedData();
 			reader.BaseStream.Position = 0; //zabezpieczyc przed reader bez sciezki do pliku
 
 			string line;
@@ -354,6 +361,7 @@ namespace planerConsole_1
 
 		private void SetReaderOn (Node nod) // overload, now you can send Node object like a argument
 		{
+			reader.DiscardBufferedData();
 			reader.BaseStream.Position = 0;//zabezpieczyc przed reader bez sciezki do pliku
 
 			string line;
@@ -369,10 +377,11 @@ namespace planerConsole_1
 		private int GetLevel (UInt32 ID)
 		{
 			long remPosition = reader.BaseStream.Position;
-
+			reader.DiscardBufferedData();
 			reader.BaseStream.Position = 0;
 
 			string line;
+
 			while ((line = reader.ReadLine()) != null) 
 			{
 				if(ParseID(line) == ID)
@@ -389,7 +398,7 @@ namespace planerConsole_1
 		private UInt32 FindMaxNodeID ()
 		{
 			long remPosition = reader.BaseStream.Position; //zabezpieczyc przed reader bez sciezki do pliku
-			
+			reader.DiscardBufferedData();
 			reader.BaseStream.Position = 0;
 			string line;
 			UInt32 maxID = 0;
@@ -434,8 +443,8 @@ namespace planerConsole_1
 		private int CountSubTreeElements (UInt32 headID)
 		{
 			int currentlevel = GetLevel (headID);
-
 			long remPosition = reader.BaseStream.Position;
+			reader.DiscardBufferedData();
 			SetReaderOn (headID);
 			string line;
 
@@ -457,18 +466,17 @@ namespace planerConsole_1
 		private int CountSubTreeElements(UInt32 headID, StateOfNode state)
 		{
 			int currentlevel = GetLevel (headID);
-
 			long remPosition = reader.BaseStream.Position;
+			reader.DiscardBufferedData();
 			SetReaderOn (headID);
 			string line;
 
 			int count=0;
-
 			while ((line=reader.ReadLine()) != null) 
 			{
-				if((ParseLevel(line) > currentlevel) && ParseState(line) == state)
+				if(ParseLevel(line) > currentlevel)
 				{
-					count++;
+					if(ParseState(line) == state) count++;
 				}
 				else break;
 			}
@@ -481,6 +489,7 @@ namespace planerConsole_1
 		{
 			int currentLevel = GetLevel (headID);
 			long remPositoin = reader.BaseStream.Position;
+			reader.DiscardBufferedData();
 			SetReaderOn (headID);
 			string line;
 

@@ -96,9 +96,17 @@ namespace planerConsole_1
 				{
 					switch(args[2])
 					{
-						case "completed" : temp.state= StateOfNode.completed; break;
-						case "uncompleted" : temp.state = StateOfNode.uncompleted; break;
-						default: break;
+					case "completed" : 
+						temp.state= StateOfNode.completed; 
+						mod.ChangeStateOfAllSubNodes(temp.GetID(), StateOfNode.uncompleted, StateOfNode.dontcare);
+						break;
+					case "uncompleted" : 
+						temp.state = StateOfNode.uncompleted; 
+						mod.ChangeStateOfAllSubNodes(temp.GetID(), StateOfNode.completed, StateOfNode.uncompleted);
+						mod.ChangeStateOfAllSubNodes(temp.GetID(), StateOfNode.dontcare, StateOfNode.uncompleted);
+						break;
+					default: 
+						break;
 					}
 					mod.Save(temp);
 					ReloadLists();

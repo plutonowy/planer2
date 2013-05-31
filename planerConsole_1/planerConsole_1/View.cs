@@ -102,8 +102,8 @@ namespace planerConsole_1
 			if (C.currentNode != null)
 			{
 				float prog = C.mod.GetProgres (C.currentNode.GetID ()) * 100;
-				int prog2 = Convert.ToInt16(prog); // zmiana float na int
-				Console.WriteLine ("postep dla {0}: {1}%", C.currentNode.name, prog2);
+				//int prog2 = Convert.ToInt16(prog); // zmiana float na int
+				Console.WriteLine ("postep dla {0}: {1}%", C.currentNode.name, (int)prog);
 			}
 		}
 
