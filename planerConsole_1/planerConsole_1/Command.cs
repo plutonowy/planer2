@@ -35,167 +35,191 @@ namespace planerConsole_1
 		}
 		public override void realizeCommand (params string[] args)
 		{
-			int countCompleted = 0;
-			int countAll = 0;
-			foreach (Node tmp in mod.currentSubNodesList) 
-			{
-				if(tmp.state == StateOfNode.completed)
-					countCompleted++;
-				countAll++;
-			}
-			Progress();
-			double progress = (progressSum/numberOfNodes)*100;
-			if(double.IsNaN(progress)) progress = 0;
 
-			Console.WriteLine("progress: {0}%", progress);
 		}
-
-		public void Progress() //chyba nie moze zadzialac, nalezy przeszukac plikt tekstowy
-		{			//bo zmienia sie currentSubnodesList
-			List<Node> tempList = mod.currentSubNodesList;
-
-			foreach (Node tmp in tempList) 
-			{
-				if(checkNode(tmp.name))
-				{
-					conductor.controllerInput(string.Format("cd {0}",tmp.name));
-					if(tmp.state == StateOfNode.completed)
-						progressSum++;
-					numberOfNodes++;
-					Console.WriteLine("jestem");
-					Progress();
-					conductor.controllerInput("cd ..");
-				}
-			}
-		}
-		public bool checkNode (string name)
-		{
-			foreach(Node tmp in mod.currentSubNodesList)
-				if(tmp.name == name) return true;
-			return false;
-		}
-
 	}
 
 	public class CommandDEL : Command
 	{
-		public Model mod;
-		public CommandDEL (Model mod) : base("del", "usuwanie podwezla: del <nazwa>", 1)
+		private Model mod;
+		private Controller con;
+		public CommandDEL (Model mod, Controller con) : base("del", "usuwanie podwezla: del <nazwa>", 1)
 		{
 			this.mod = mod;
-		}
-		public override void realizeCommand(params string[] args)
-		{
-			Console.WriteLine("usuwam podwezel o nazwie {0}",args[1]);
-			//mod.DeleteNode(args[1]);
-		}
-	}
-
-	public class CommandADD : Command
-	{
-		public Model mod;
-		public CommandADD (Model mod) : base ("add", "dodawanie nowego podwezla: add <nazwa>", 1)
-		{
-			this.mod = mod;
+			this.con = con;
 		}
 		public override void realizeCommand (params string[] args)
 		{
-			Console.WriteLine("dodaje nowy wezel o nazwie {0}", args[1]);
+			foreach (Node tmp in con.subNodesList) 
+			{
+				if(tmp.name == args[1])
+				{
+					DestroyChildren(tmp);
+					if(con.currentLvl==0)
+						con.subNodesList = mod.GetSubNodesList(0);
+					else
+						con.subNodesList = mod.GetSubNodesList(con.currentNode.GetID());
+				}
+			}
+		}
+		void DestroyChildren (Node current)
+		{
+			List<Node> children = mod.GetSubNodesList (current.GetID ());
+			if (children.Count == 0)
+				mod.Delete (current.GetID());
+			else 
+			{
+				foreach(Node tmp in children)
+				{
+					DestroyChildren(tmp);
+					children = mod.GetSubNodesList(current.GetID());
+				}
+				DestroyChildren(current);
+			}
 
-			//mod.AddNode(args[1]);
+		}
+	}
+
+	public class CommandADD : Command //nie dziala wpisuywanie do plikuu 
+	{
+		public Model mod;
+		public Controller con;
+		public CommandADD (Model mod, Controller con) : base ("add", "dodawanie nowego podwezla: add <nazwa>", 1)
+		{
+			this.mod = mod;
+			this.con = con;
+		}
+		public override void realizeCommand (params string[] args)
+		{
+			View.WriteMessage(string.Format("dodaje nowy wezel o nazwie {0}", args[1]));
+			UInt32 newID = 1000; //tymczasowa wartosc
+			Node newNode = new Node(args[1],StateOfNode.uncompleted,newID,con.currentLvl+1);
+			if(con.currentLvl!=0)
+				mod.NewNode(con.currentNode.GetID(),newNode);
+			else mod.NewNode(true,newNode);
+			con.subNodesList.Add(newNode);
 		}
 	}
 
 	public class CommandCN : Command
 	{
-		public Model mod;
-		public CommandCN (Model mod) : base("cn", "zmiana nazwy podwezla: cn <nazwa zmienianego> <nazwa na ktora chcemy zmienic>", 2)
+		private Model mod;
+		private Controller con;
+		public CommandCN (Model mod, Controller con) : base("cn", "zmiana nazwy podwezla: cn <nazwa zmienianego> <nazwa na ktora chcemy zmienic>", 2)
 		{
 			this.mod = mod;
+			this.con = con;
 		}
 		public override void realizeCommand (params string[] args)
 		{
-			foreach (Node temp in mod.currentSubNodesList) 
+			string newName = args [2];
+			foreach (Node temp in con.subNodesList) 
 			{
 				if(temp.name == args[1])
 				{
-				Console.WriteLine ("zmieniam nazwe wezla {0} na {1}", args [1], args [2]);
-				//mod.LoadNode(args[1],args[2]))
+					temp.name = newName;
+					mod.Save(temp);
+					con.currentNode = temp;
 					return;
 				}
 			}
-			Console.WriteLine("nie ma takiego podwezla!");
+			View.WriteMessage("nie ma takiego podwezla");
 		}
 	}
 
 	public class CommandCS : Command
 	{
-		public Model mod;
-		public CommandCS (Model mod) : base("cs", "zmiana stanu podwezla: cs <nazwa zmienianego> <uncompleted/completed>", 2)
+		private Model mod;
+		private Controller con;
+		public CommandCS (Model mod, Controller con) : base("cs", "zmiana stanu podwezla: cs <nazwa zmienianego> <uncompleted/completed>", 2)
 		{
 			this.mod = mod;
+			this.con = con;
 		}
 		public override void realizeCommand (params string[] args)
 		{
-			foreach (Node temp in mod.currentSubNodesList) 
+			foreach (Node temp in con.subNodesList) 
 			{
 				if(temp.name == args[1])
 				{
-				
 					switch(args[2])
 					{
-						case "completed": 
-							Console.WriteLine ("zmieniam stan wezla {0} na {1}", args[1], args[2]);
-							//mod.LoadNode(args[1],StateOfNode.completed);
-							break;
-						case "uncompleted" :
-							Console.WriteLine ("zmieniam stan wezla {0} na {1}", args[1], args[2]);
-							//mod.LoadNode(args[1], StateOfNode.uncompleted);
-							break;
-					default: Console.WriteLine("halo halo! bledny stan!"); break;
+						case "completed" : temp.state= StateOfNode.completed; break;
+						case "uncompleted" : temp.state = StateOfNode.uncompleted; break;
+						default: View.WriteMessage("błędny stan!"); break;
 					}
-
+					mod.Save(temp);
+					con.currentNode = temp;
 					return;
 				}
 			}
-			Console.WriteLine("nie ma takiego podwezla!"); // niepotrzebne
+			View.WriteMessage("nie ma takiego podwęzła!");
 		}
 	}
 
 	public class CommandCD : Command
 	{
 		public Model mod;
-		public CommandCD (Model mod) : base("cd", "przechodzenie do kolejnego wezla: cd <nazwa>",1)
+		public Controller con;
+
+
+		public CommandCD (Model mod, Controller con) : base("cd", "przechodzenie do kolejnego wezla: cd <nazwa>",1)
 		{
 			this.mod = mod;
+			this.con = con;
 		}
 		public override void realizeCommand (params string[] args)
 		{
-			if (args [1] == "..") {
-				mod.GoBack();
+			if (args [1] == "..") 
+			{
+				if(con.prevSubNodesList.Count<1)
+				{
+					con.currentLvl = 0;
+					con.currentNode = null;
+					con.prevSubNodesList.Clear();
+					con.subNodesList = mod.GetSubNodesList(0);
+				}
+				else
+				{
+					con.currentLvl--;
+					int lastNode = con.prevSubNodesList.Count-1;
+					con.currentNode = con.prevSubNodesList[lastNode];
+					con.prevSubNodesList = mod.GetPrevNodesList(con.currentNode.GetID());
+					con.subNodesList = mod.GetSubNodesList(con.currentNode.GetID());
+				}
 			}
 			else
 			{
-				Console.WriteLine ("przechodze do wezla o nazwie {0}", args [1]);
-				mod.LoadNode (args [1]);
+				if(con.subNodesList.Count==0) return;
+				foreach(Node temp in con.subNodesList)
+				{			
+
+					if(temp.name == args[1])
+					{
+						con.currentNode = temp;
+						con.currentLvl++;
+						con.subNodesList=mod.GetSubNodesList(temp.GetID());
+						con.prevSubNodesList = mod.GetPrevNodesList(temp.GetID());
+						break;
+					}
+				}
 			}
 		}
 	}
 
 	public class CommandLS : Command
 	{
-		public Model mod;
-		public CommandLS (Model mod) : base("ls", "wyswietlanie podwezlow", 0)
+		public Controller conductor;
+		public CommandLS (Controller conductor) : base("ls", "wyswietlanie podwezlow", 0)
 		{
-			this.mod = mod;
+			this.conductor = conductor;
 		}
 		public override void realizeCommand (params string[] args)
 		{
-			foreach (Node temp in mod.currentSubNodesList) 
-			{
-				Console.Write("{0}({1})\t",temp.name, temp.state);
-			}
-			Console.WriteLine();
+			if(conductor.subNodesList.Count!=0)
+				View.DisplaySubNodesList(conductor.subNodesList);
+			else 
+				View.WriteMessage("brak podcelow");
 		}
 	}
 
@@ -214,7 +238,7 @@ namespace planerConsole_1
 			{
 				temp=temp+one.commandName+"\t"+one.commandDescription+"\n";
 			}
-			Console.WriteLine(temp);
+			View.WriteMessage(temp);
 		}
 	}
 }
