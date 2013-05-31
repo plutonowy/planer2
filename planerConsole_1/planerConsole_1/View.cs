@@ -63,21 +63,23 @@ namespace planerConsole_1
 				break;
 			}
 
-			if(C.currentNode != null)Console.WriteLine("{0}>>:", C.currentNode.name);
+			if(C.currentNode != null)Console.Write("{0}>>:", C.currentNode.name);
 			else Console.Write(">>:");
 		}
 
 		private void Help()
 		{
-			Console.WriteLine("Cd <name> \t przechodzenie do wezle 'name'\nLs \t wyswietlanie" +"podcelow\n" +
-								"ChState <name> <completed/uncompleted> \t zmiana stanu wezla 'name' na completed/uncompleted" +
-			                  "\nChName <name> <newName> \t zmiana nazwy wezla 'name' na 'newName'" +
-			                  "\nAddNode <name> \t tworzenie wezla 'name'" +
-			                  "\nDelNode <name> \t usuwanie wezla 'name'");
+			Console.WriteLine("cd <name> \t przechodzenie do wezle 'name'\nls \t wyswietlanie" +"podcelow\n" +
+								"chState <name> <completed/uncompleted> \t zmiana stanu wezla 'name' na completed/uncompleted" +
+			                  "\nchName <name> <newName> \t zmiana nazwy wezla 'name' na 'newName'" +
+			                  "\nadd <name> \t tworzenie wezla 'name'" +
+			                  "\ndel <name> \t usuwanie wezla 'name'");
 		}
 		private void Ls ()
 		{
-			Console.WriteLine("{0}:",C.currentNode.name);
+			if(C.currentNode != null)
+				Console.WriteLine("{0}:",C.currentNode.name);
+
 			foreach (Node tmp in C.subNodesList) 
 			{
 				Console.WriteLine("\t{0}({1})",tmp.name,tmp.state);

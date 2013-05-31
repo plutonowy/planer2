@@ -30,11 +30,11 @@ namespace planerConsole_1
 			string[] inputTable = input.Split (' ');
 			switch (inputTable [0]) 
 			{
-				case "Cd": Cd(inputTable); break;
-				case "ChState": ChState(inputTable); break;
-				case "ChName": ChName(inputTable); break;
-				case "AddNode": AddNode(inputTable); break;
-				case "DelNode": DelNode(inputTable); break;
+				case "cd": Cd(inputTable); break;
+				case "chState": ChState(inputTable); break;
+				case "chName": ChName(inputTable); break;
+				case "add": AddNode(inputTable); break;
+				case "del": DelNode(inputTable); break;
 				default: break;
 				}
 		}
