@@ -108,7 +108,7 @@ namespace planerConsole_1
 					return;
 				}
 			}
-			View.WriteMessage("nie ma takiego podwęzła!");
+
 		}
 
 		private void AddNode (params string[] args)

@@ -7,20 +7,15 @@ namespace planerConsole_1
 	{
 		public static void Main (string[] args)
 		{
-			Console.WriteLine ("Hello World!");
+			Console.WriteLine ("PlanYour World!");
+			View viewer = new View();
 
-			//TESTOWANIE TUTAJ ;)
-			//Model mod = new Model ("/home/kamil/Desktop/repositories/planer2/nowytyp.txt");
-			Controller conductor = new Controller ("/home/kamil/Desktop/repositories/planer2/nowytyp.txt");
+			string line = "";
 			while (true) 
 			{
-				Console.Write(":>> ");
-				conductor.controllerInput(Console.ReadLine());
-
-
-			//TESTOWANIE TUTAJ ;)
-
-			//Console.ReadLine();
+				line = Console.ReadLine();
+				if(line=="Exit") break;
+				viewer.Input(line);
 			}
 		}
 	}

@@ -46,23 +46,47 @@ namespace planerConsole_1
 			switch (line) 
 			{
 			case "ls":
-				Ls();
+				Ls ();
 				break;
 			case "help":
-				Help();
+				Help ();
 				break;
 			case "progress":
-				Progress();
+				Progress ();
 				break;
 			case "tree":
 				// wywolanie tree
 				break;
 			default:
-				C.controllerInput(line);
+				C.controllerInput (line);
 				break;
+			}
+
+			Console.WriteLine("{0}>>:", C.currentNode.name);
+		}
+
+		private void Help()
+		{
+			Console.WriteLine("Cd <name> \t przechodzenie do wezle 'name'\nLs \t wyswietlanie" +"podcelow\n" +
+								"ChState <name> <completed/uncompleted> \t zmiana stanu wezla 'name' na completed/uncompleted" +
+			                  "\nChName <name> <newName> \t zmiana nazwy wezla 'name' na 'newName'" +
+			                  "\nAddNode <name> \t tworzenie wezla 'name'" +
+			                  "\nDelNode <name> \t usuwanie wezla 'name'");
+		}
+		private void Ls ()
+		{
+			Console.WriteLine("{0}:",C.currentNode.name);
+			foreach (Node tmp in C.subNodesList) 
+			{
+				Console.WriteLine("\t{0}({1})",tmp.name,tmp.state);
 			}
 		}
 
+		private void Progress()
+		{
+			float prog = C.mod.GetProgres(C.currentNode.GetID());
+			Console.WriteLine("postep dla {0}: {1}%",C.currentNode.name,prog*100);
+		}
 	}
 }
 
